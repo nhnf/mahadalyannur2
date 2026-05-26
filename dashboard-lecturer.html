@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Dosen - Sistem Akumulasi Gaji Dosen</title>
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard-lecturer.html" class="sidebar-logo">
+          <div class="sidebar-logo-icon">G</div>
+          <span class="sidebar-logo-text">Gaji Dosen</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-page="dashboard">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#jadwal" class="nav-item" data-page="jadwal">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span>Jadwal Saya</span>
+        </a>
+        <a href="#slip" class="nav-item" data-page="slip">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Slip Gaji</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div style="padding:var(--space-3) var(--space-4);margin-bottom:var(--space-2);">
+          <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:2px;">Login sebagai</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary);" id="userNameSidebar">-</div>
+          <span class="badge badge-green" style="margin-top:4px;">Dosen</span>
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn" style="width:100%;justify-content:flex-start;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-header-content">
+          <div>
+            <button class="menu-toggle" id="menuToggle">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+          </div>
+          <div class="page-actions">
+            <div class="flex items-center gap-3">
+              <span class="body-sm text-secondary" id="userEmail"></span>
+              <div class="avatar avatar-md" style="background:var(--success);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;" id="userInitial">D</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-body">
+
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page-content">
+          <h1 class="display-lg mb-2">Selamat Datang, <span id="greetName">Dosen</span></h1>
+          <p class="body-md text-secondary mb-6">Portal informasi jadwal dan gaji Anda</p>
+
+          <!-- Info Dosen -->
+          <div class="card mb-6">
+            <div class="card-header"><h2 class="card-title">Informasi Dosen</h2></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);">
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">NIDN</div>
+                  <div style="font-weight:600;" id="infoNidn">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Nama</div>
+                  <div style="font-weight:600;" id="infoName">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Kategori</div>
+                  <div id="infoCategory">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Tarif per Jam</div>
+                  <div style="font-weight:600;color:var(--primary-500);" id="infoRate">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Bulan Ini -->
+          <div class="content-grid content-grid-4 mb-6">
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Jadwal Bulan Ini</div>
+                <div class="stat-card-value" id="myTotalJadwal">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-green">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Jam Hadir</div>
+                <div class="stat-card-value" id="myJamHadir">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-amber">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Pending</div>
+                <div class="stat-card-value" id="myPending">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-purple">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Estimasi Gaji</div>
+                <div class="stat-card-value" id="myEstGaji">Rp 0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JADWAL PAGE -->
+        <div id="page-jadwal" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Jadwal Mengajar Saya</h1>
+          <div class="filter-panel">
+            <div class="filter-panel-header"><h3 class="filter-panel-title">Filter Periode</h3></div>
+            <div class="filter-panel-body">
+              <div class="form-group">
+                <label class="form-label">Bulan</label>
+                <select class="select" id="myScheduleMonth">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun</label>
+                <select class="select" id="myScheduleYear"></select>
+              </div>
+            </div>
+            <div class="filter-panel-footer">
+              <button class="btn btn-primary btn-sm" id="loadMyScheduleBtn">Tampilkan</button>
+            </div>
+          </div>
+          <div class="data-table-wrapper">
+            <div class="table-container">
+              <table class="table">
+                <thead><tr><th>Tanggal</th><th>Sesi Jam</th><th>Status</th><th>Catatan</th></tr></thead>
+                <tbody id="myScheduleTableBody">
+                  <tr><td colspan="4" style="text-align:center;padding:var(--space-8);">
+                    <div class="empty-state">
+                      <div class="empty-state-title">Pilih Periode</div>
+                      <div class="empty-state-description">Pilih bulan dan tahun lalu klik Tampilkan</div>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIP GAJI PAGE -->
+        <div id="page-slip" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Slip Gaji</h1>
+          <div class="filter-panel">
+            <div class="filter-panel-header"><h3 class="filter-panel-title">Pilih Periode</h3></div>
+            <div class="filter-panel-body">
+              <div class="form-group">
+                <label class="form-label">Bulan</label>
+                <select class="select" id="mySlipMonth">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun</label>
+                <select class="select" id="mySlipYear"></select>
+              </div>
+            </div>
+            <div class="filter-panel-footer">
+              <button class="btn btn-primary btn-sm" id="loadMySlipBtn">Tampilkan</button>
+            </div>
+          </div>
+          <div id="slipContainer" style="display:none;">
+            <div class="card" style="max-width:560px;margin:0 auto;">
+              <div class="card-header">
+                <h2 class="card-title">Slip Gaji - <span id="slipPeriode">-</span></h2>
+                <button class="btn btn-secondary btn-sm" onclick="printMySlip()">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                  Cetak
+                </button>
+              </div>
+              <div class="card-body">
+                <table style="width:100%;border-collapse:collapse;" id="slipTable">
+                  <tr style="border-bottom:1px solid var(--card-border);">
+                    <td style="padding:8px 0;color:var(--text-secondary);">Jam Terjadwal</td>
+                    <td style="padding:8px 0;text-align:right;" id="slipJamJadwal">-</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--card-border);">
+                    <td style="padding:8px 0;color:var(--text-secondary);">Jam Hadir</td>
+                    <td style="padding:8px 0;text-align:right;" id="slipJamHadir">-</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--card-border);">
+                    <td style="padding:8px 0;color:var(--text-secondary);">Gaji Tetap (50%)</td>
+                    <td style="padding:8px 0;text-align:right;" id="slipGajiTetap">-</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--card-border);">
+                    <td style="padding:8px 0;color:var(--text-secondary);">Gaji Kehadiran (50%)</td>
+                    <td style="padding:8px 0;text-align:right;" id="slipGajiHadir">-</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--card-border);">
+                    <td style="padding:8px 0;color:var(--text-secondary);">Uang Transportasi</td>
+                    <td style="padding:8px 0;text-align:right;" id="slipTransport">-</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0;font-weight:700;font-size:15px;">Total Gaji</td>
+                    <td style="padding:12px 0;text-align:right;font-weight:700;font-size:20px;color:var(--primary-500);" id="slipTotal">-</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="slipEmpty" style="text-align:center;padding:var(--space-12);">
+            <div class="empty-state-title">Belum Ada Data</div>
+            <div class="empty-state-description">Pilih periode untuk melihat slip gaji Anda</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner spinner-lg"></div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+  var myLecturerId = null;
+  var mySlipData   = null;
+
+  // ── NAVIGATION ──────────────────────────────────────────────
+  function navigateToPage(page) {
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    var nav = document.querySelector('[data-page="' + page + '"]');
+    if (nav) nav.classList.add('active');
+    document.querySelectorAll('.page-content').forEach(function(el) { el.style.display = 'none'; });
+    var pg = document.getElementById('page-' + page);
+    if (pg) pg.style.display = 'block';
+  }
+
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      navigateToPage(item.getAttribute('data-page'));
+    });
+  });
+
+  document.getElementById('menuToggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  // ── LOAD PROFIL DOSEN ────────────────────────────────────────
+  async function loadMyProfile(email) {
+    try {
+      const { data, error } = await _sb.from('v_lecturers_with_category').select('*').is('deleted_at', null);
+      if (error) throw error;
+      var lecturers = data || [];
+      var me = lecturers.find(function(l) { return l.email && l.email.trim().toLowerCase() === email.trim().toLowerCase(); });
+
+      if (!me) {
+        document.getElementById('greetName').textContent = email.split('@')[0];
+        document.getElementById('userNameSidebar').textContent = email;
+        document.getElementById('infoNidn').textContent   = 'Belum terdaftar';
+        document.getElementById('infoName').textContent   = 'Profil belum terhubung';
+        document.getElementById('infoCategory').innerHTML = '<span class="badge badge-gray">-</span>';
+        document.getElementById('infoRate').textContent   = '-';
+        showToast('Profil dosen tidak ditemukan. Hubungi admin.', 'warning');
+        return;
+      }
+
+      myLecturerId = me.id;
+      document.getElementById('greetName').textContent       = me.name || 'Dosen';
+      document.getElementById('userNameSidebar').textContent = me.name || email;
+      document.getElementById('userInitial').textContent     = (me.name || 'D').charAt(0).toUpperCase();
+      document.getElementById('infoNidn').textContent        = me.nidn || '-';
+      document.getElementById('infoName').textContent        = me.name || '-';
+      document.getElementById('infoCategory').innerHTML      = '<span class="badge badge-blue">' + (me.category_code||'-') + '</span>';
+      document.getElementById('infoRate').textContent        = formatCurrency(me.hourly_rate || 0) + ' / jam';
+      loadMyStats();
+    } catch(e) { console.error('loadMyProfile error:', e); }
+  }
+
+  // ── STATS DASHBOARD ──────────────────────────────────────────
+  async function loadMyStats() {
+    if (!myLecturerId) return;
+    try {
+      var now = new Date();
+      var month = now.getMonth() + 1, year = now.getFullYear();
+      var firstDay = year + '-' + String(month).padStart(2,'0') + '-01';
+      var lastDay  = new Date(year, month, 0).toISOString().split('T')[0];
+
+      const [schRes, payRes] = await Promise.all([
+        _sb.from('schedules').select('status').eq('lecturer_id', myLecturerId)
+          .is('deleted_at', null).gte('schedule_date', firstDay).lte('schedule_date', lastDay),
+        _sb.from('payroll').select('total_salary').eq('lecturer_id', myLecturerId)
+          .eq('period_month', month).eq('period_year', year).limit(1)
+      ]);
+
+      var schedules = schRes.data || [];
+      document.getElementById('myTotalJadwal').textContent = schedules.length;
+      document.getElementById('myJamHadir').textContent    = schedules.filter(function(s) { return s.status === 'hadir'; }).length + ' jam';
+      document.getElementById('myPending').textContent     = schedules.filter(function(s) { return s.status === 'pending'; }).length;
+
+      var myPayroll = (payRes.data || [])[0];
+      document.getElementById('myEstGaji').textContent = myPayroll ? formatCurrency(myPayroll.total_salary) : 'Belum dihitung';
+    } catch(e) { console.error('loadMyStats error:', e); }
+  }
+
+  // ── JADWAL ───────────────────────────────────────────────────
+  async function loadMySchedule() {
+    if (!myLecturerId) { showToast('Data dosen belum dimuat', 'warning'); return; }
+    var month = parseInt(document.getElementById('myScheduleMonth').value);
+    var year  = parseInt(document.getElementById('myScheduleYear').value);
+    var tbody = document.getElementById('myScheduleTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
+    try {
+      var firstDay = year + '-' + String(month).padStart(2,'0') + '-01';
+      var lastDay  = new Date(year, month, 0).toISOString().split('T')[0];
+      const { data, error } = await _sb.from('schedules').select('*')
+        .eq('lecturer_id', myLecturerId).is('deleted_at', null)
+        .gte('schedule_date', firstDay).lte('schedule_date', lastDay)
+        .order('schedule_date').order('session_slot');
+      if (error) throw error;
+      var schedules = data || [];
+      if (schedules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);">Tidak ada jadwal pada periode ini</td></tr>';
+        return;
+      }
+      var statusBadge = { pending:'<span class="badge badge-amber">Pending</span>', hadir:'<span class="badge badge-green">Hadir</span>', absen:'<span class="badge badge-red">Absen</span>' };
+      tbody.innerHTML = schedules.map(function(s) {
+        return '<tr><td><strong>' + formatDate(s.schedule_date, 'short') + '</strong></td>' +
+          '<td><span class="badge badge-blue">Jam ' + s.session_slot + '</span></td>' +
+          '<td>' + (statusBadge[s.status]||'<span class="badge badge-gray">-</span>') + '</td>' +
+          '<td>' + (s.notes||'-') + '</td></tr>';
+      }).join('');
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);color:var(--danger);">Gagal memuat jadwal</td></tr>';
+    }
+  }
+
+  document.getElementById('loadMyScheduleBtn').addEventListener('click', loadMySchedule);
+
+  // ── SLIP GAJI ────────────────────────────────────────────────
+  async function loadMySlip() {
+    if (!myLecturerId) { showToast('Data dosen belum dimuat', 'warning'); return; }
+    var month = parseInt(document.getElementById('mySlipMonth').value);
+    var year  = parseInt(document.getElementById('mySlipYear').value);
+    try {
+      showLoading();
+      const { data, error } = await _sb.from('payroll').select('*')
+        .eq('lecturer_id', myLecturerId).eq('period_month', month).eq('period_year', year).limit(1);
+      if (error) throw error;
+      var p = (data || [])[0];
+
+      if (!p) {
+        document.getElementById('slipContainer').style.display = 'none';
+        document.getElementById('slipEmpty').style.display = 'block';
+        document.getElementById('slipEmpty').querySelector('.empty-state-description').textContent =
+          'Belum ada data gaji untuk ' + getMonthName(month) + ' ' + year + '. Hubungi admin.';
+        return;
+      }
+
+      mySlipData = p;
+      document.getElementById('slipPeriode').textContent  = getMonthName(month) + ' ' + year;
+      document.getElementById('slipJamJadwal').textContent = (p.total_scheduled_hours || 0) + ' jam';
+      document.getElementById('slipJamHadir').textContent  = (p.total_attended_hours  || 0) + ' jam';
+      document.getElementById('slipGajiTetap').textContent = formatCurrency(p.fixed_component_amount);
+      document.getElementById('slipGajiHadir').textContent = formatCurrency(p.attendance_component_amount);
+      document.getElementById('slipTransport').textContent = formatCurrency(p.transportation_amount);
+      document.getElementById('slipTotal').textContent     = formatCurrency(p.total_salary);
+
+      document.getElementById('slipContainer').style.display = 'block';
+      document.getElementById('slipEmpty').style.display = 'none';
+
+    } catch(e) {
+      showToast('Gagal memuat slip gaji', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  document.getElementById('loadMySlipBtn').addEventListener('click', loadMySlip);
+
+  function printMySlip() {
+    if (!mySlipData) return;
+    var p = mySlipData;
+    var month = getMonthName(parseInt(document.getElementById('mySlipMonth').value));
+    var year  = document.getElementById('mySlipYear').value;
+    var win = window.open('', '_blank', 'width=600,height=700');
+    win.document.write(
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Slip Gaji</title>' +
+      '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;}h2{text-align:center;margin-bottom:4px;}.sub{text-align:center;color:#555;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}td{padding:8px 12px;border-bottom:1px solid #eee;}td:last-child{text-align:right;}.total td{font-weight:bold;font-size:16px;border-top:2px solid #333;border-bottom:none;}.footer{margin-top:40px;text-align:center;font-size:12px;color:#888;}</style>' +
+      '</head><body>' +
+      '<h2>SLIP GAJI DOSEN</h2><div class="sub">Periode: ' + month + ' ' + year + '</div>' +
+      '<table>' +
+        '<tr><td>Nama</td><td>' + (p.lecturer_name||'-') + '</td></tr>' +
+        '<tr><td>NIDN</td><td>' + (p.nidn||'-') + '</td></tr>' +
+        '<tr><td>Kategori</td><td>' + (p.category_code||'-') + '</td></tr>' +
+        '<tr><td colspan="2" style="background:#f5f5f5;font-weight:bold;">Rincian Gaji</td></tr>' +
+        '<tr><td>Jam Terjadwal</td><td>' + (p.total_scheduled_hours||0) + ' jam</td></tr>' +
+        '<tr><td>Jam Hadir</td><td>' + (p.total_attended_hours||0) + ' jam</td></tr>' +
+        '<tr><td>Gaji Tetap (50%)</td><td>' + formatCurrency(p.fixed_component_amount) + '</td></tr>' +
+        '<tr><td>Gaji Kehadiran (50%)</td><td>' + formatCurrency(p.attendance_component_amount) + '</td></tr>' +
+        '<tr><td>Uang Transportasi</td><td>' + formatCurrency(p.transportation_amount) + '</td></tr>' +
+        '<tr class="total"><td>TOTAL GAJI</td><td>' + formatCurrency(p.total_salary) + '</td></tr>' +
+      '</table>' +
+      '<div class="footer">Dicetak pada ' + new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) + '</div>' +
+      '</body></html>'
+    );
+    win.document.close(); win.print();
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────
+  (function init() {
+    // ── ROUTE GUARD ──────────────────────────────────────────
+    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
+    if (!session || !session.user) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    var email = session.user.email || '';
+    document.getElementById('userEmail').textContent = email;
+
+    var y = new Date().getFullYear();
+    var opts = '';
+    for (var i = y - 2; i <= y + 1; i++) opts += '<option value="' + i + '"' + (i === y ? ' selected' : '') + '>' + i + '</option>';
+    ['myScheduleYear','mySlipYear'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = opts;
+    });
+    var m = new Date().getMonth() + 1;
+    ['myScheduleMonth','mySlipMonth'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = m;
+    });
+
+    if (email) loadMyProfile(email);
+  })();
+  </script>
+</body>
+</html>

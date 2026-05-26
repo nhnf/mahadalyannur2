@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Navigation</title>
+  
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  
+  <style>
+    .test-indicator {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #22C55E;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <!-- Test Indicator -->
+  <div class="test-indicator">✓ JavaScript Loaded</div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">G</div>
+          <span class="sidebar-logo-text">Test Navigation</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="categories">
+          <span>Kategori</span>
+        </a>
+        <a href="#" class="nav-item" data-page="lecturers">
+          <span>Dosen</span>
+        </a>
+        <a href="#" class="nav-item" data-page="schedules">
+          <span>Jadwal</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-body">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page-content">
+          <h1 class="display-lg">Dashboard Page</h1>
+          <div class="card">
+            <div class="card-body">
+              <p>Ini adalah halaman Dashboard. Klik menu di sidebar untuk pindah halaman.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories Page -->
+        <div id="page-categories" class="page-content" style="display: none;">
+          <h1 class="display-lg">Kategori Page</h1>
+          <div class="card">
+            <div class="card-body">
+              <p style="color: #22C55E; font-size: 20px; font-weight: bold;">✓ BERHASIL! Navigasi ke Kategori berhasil!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lecturers Page -->
+        <div id="page-lecturers" class="page-content" style="display: none;">
+          <h1 class="display-lg">Dosen Page</h1>
+          <div class="card">
+            <div class="card-body">
+              <p style="color: #22C55E; font-size: 20px; font-weight: bold;">✓ BERHASIL! Navigasi ke Dosen berhasil!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedules Page -->
+        <div id="page-schedules" class="page-content" style="display: none;">
+          <h1 class="display-lg">Jadwal Page</h1>
+          <div class="card">
+            <div class="card-body">
+              <p style="color: #22C55E; font-size: 20px; font-weight: bold;">✓ BERHASIL! Navigasi ke Jadwal berhasil!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    console.log('=== TEST NAVIGATION SCRIPT LOADED ===');
+    
+    // Navigation function
+    function navigateToPage(page) {
+      console.log('navigateToPage called with:', page);
+      
+      // Update active nav item
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      const navItem = document.querySelector(`[data-page="${page}"]`);
+      console.log('Found nav item:', navItem);
+      if (navItem) {
+        navItem.classList.add('active');
+      }
+
+      // Hide all pages
+      document.querySelectorAll('.page-content').forEach(content => {
+        content.style.display = 'none';
+      });
+
+      // Show selected page
+      const pageElement = document.getElementById(`page-${page}`);
+      console.log('Found page element:', pageElement);
+      if (pageElement) {
+        pageElement.style.display = 'block';
+        console.log('✓ Page displayed successfully!');
+      } else {
+        console.error('❌ Page element not found!');
+      }
+    }
+
+    // Add click handlers
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, attaching event listeners...');
+      
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = item.dataset.page;
+          console.log('Nav item clicked:', page);
+          navigateToPage(page);
+        });
+      });
+      
+      console.log('✓ Event listeners attached!');
+    });
+
+    // Test function - can be called from console
+    window.testNav = function(page) {
+      console.log('Manual test navigation to:', page);
+      navigateToPage(page);
+    };
+
+    console.log('=== READY TO TEST ===');
+    console.log('Try clicking menu items or run: testNav("lecturers")');
+  </script>
+</body>
+</html>

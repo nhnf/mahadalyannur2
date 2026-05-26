@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Keuangan - Sistem Akumulasi Gaji Dosen</title>
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard-finance.html" class="sidebar-logo">
+          <div class="sidebar-logo-icon">G</div>
+          <span class="sidebar-logo-text">Gaji Dosen</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-page="dashboard">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#payroll" class="nav-item" data-page="payroll">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Payroll</span>
+        </a>
+        <a href="#laporan" class="nav-item" data-page="laporan">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Laporan</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div style="padding:var(--space-3) var(--space-4);margin-bottom:var(--space-2);">
+          <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:2px;">Login sebagai</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary);" id="userEmailSidebar">-</div>
+          <span class="badge badge-amber" style="margin-top:4px;">Keuangan</span>
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn" style="width:100%;justify-content:flex-start;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-header-content">
+          <div>
+            <button class="menu-toggle" id="menuToggle">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+          </div>
+          <div class="page-actions">
+            <div class="flex items-center gap-3">
+              <span class="body-sm text-secondary" id="userEmail"></span>
+              <div class="avatar avatar-md" style="background:var(--warning);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;">K</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-body">
+
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page-content">
+          <h1 class="display-lg mb-6">Dashboard Keuangan</h1>
+          <div class="content-grid content-grid-4 mb-6">
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-purple">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Gaji Bulan Ini</div>
+                <div class="stat-card-value" id="statTotalGaji">Rp 0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Jumlah Dosen Dibayar</div>
+                <div class="stat-card-value" id="statJumlahDosen">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-green">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Jam Hadir</div>
+                <div class="stat-card-value" id="statJamHadir">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-amber">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Transport</div>
+                <div class="stat-card-value" id="statTransport">Rp 0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ringkasan per Kategori -->
+          <div class="card">
+            <div class="card-header"><h2 class="card-title">Ringkasan per Kategori</h2></div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="table">
+                  <thead><tr><th>Kategori</th><th>Jumlah Dosen</th><th>Total Jam</th><th>Total Gaji</th></tr></thead>
+                  <tbody id="summaryByCategory">
+                    <tr><td colspan="4" style="text-align:center;padding:var(--space-6);">Memuat data...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYROLL PAGE -->
+        <div id="page-payroll" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Data Payroll</h1>
+          <div class="filter-panel">
+            <div class="filter-panel-header"><h3 class="filter-panel-title">Periode</h3></div>
+            <div class="filter-panel-body">
+              <div class="form-group">
+                <label class="form-label">Bulan</label>
+                <select class="select" id="finPayrollMonth">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun</label>
+                <select class="select" id="finPayrollYear"></select>
+              </div>
+            </div>
+            <div class="filter-panel-footer">
+              <button class="btn btn-primary btn-sm" id="loadFinPayrollBtn">Tampilkan</button>
+            </div>
+          </div>
+          <div class="data-table-wrapper">
+            <div class="data-table-header">
+              <div class="data-table-actions">
+                <button class="btn btn-secondary btn-sm" id="finExportBtn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr><th>Nama Dosen</th><th>Kategori</th><th>Jam Jadwal</th><th>Jam Hadir</th><th>Gaji Tetap</th><th>Gaji Kehadiran</th><th>Transport</th><th>Total Gaji</th></tr>
+                </thead>
+                <tbody id="finPayrollTableBody">
+                  <tr><td colspan="8" style="text-align:center;padding:var(--space-8);">
+                    <div class="empty-state">
+                      <div class="empty-state-title">Pilih Periode</div>
+                      <div class="empty-state-description">Pilih bulan dan tahun lalu klik Tampilkan</div>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Total Row -->
+            <div id="finPayrollTotal" style="display:none;padding:var(--space-4) var(--space-5);background:var(--surface-2);border-top:2px solid var(--card-border);justify-content:flex-end;gap:var(--space-6);">
+              <span>Total Dosen: <strong id="finTotalDosen">0</strong></span>
+              <span>Total Gaji: <strong id="finTotalGaji" style="color:var(--primary-500);">Rp 0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAPORAN PAGE -->
+        <div id="page-laporan" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Laporan Keuangan</h1>
+          <div class="content-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4);">
+            <div class="card" style="cursor:pointer;" onclick="generateReport('monthly')">
+              <div class="card-header">
+                <div class="icon-pill icon-pill-blue">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="card-title">Laporan Bulanan</h3>
+              </div>
+              <div class="card-body">
+                <p style="font-size:14px;color:var(--text-secondary);">Rekap gaji seluruh dosen per bulan dalam format CSV</p>
+              </div>
+            </div>
+            <div class="card" style="cursor:pointer;" onclick="generateReport('category')">
+              <div class="card-header">
+                <div class="icon-pill icon-pill-green">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                </div>
+                <h3 class="card-title">Laporan per Kategori</h3>
+              </div>
+              <div class="card-body">
+                <p style="font-size:14px;color:var(--text-secondary);">Rekap total gaji dikelompokkan per kategori dosen</p>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-6">
+            <div class="card-header"><h2 class="card-title">Pilih Periode Laporan</h2></div>
+            <div class="card-body">
+              <div style="display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Bulan</label>
+                  <select class="select" id="reportMonth" style="width:160px;">
+                    <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                    <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                    <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Tahun</label>
+                  <select class="select" id="reportYear" style="width:120px;"></select>
+                </div>
+                <button class="btn btn-primary" onclick="downloadReport()">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  Download Laporan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner spinner-lg"></div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+  var finPayrollData = [];
+
+  // â”€â”€ NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  function navigateToPage(page) {
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    var nav = document.querySelector('[data-page="' + page + '"]');
+    if (nav) nav.classList.add('active');
+    document.querySelectorAll('.page-content').forEach(function(el) { el.style.display = 'none'; });
+    var pg = document.getElementById('page-' + page);
+    if (pg) pg.style.display = 'block';
+    // Auto-load data sesuai halaman
+    if (page === 'dashboard') loadDashboard();
+    if (page === 'payroll' && finPayrollData.length === 0) loadFinPayroll();
+  }
+
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      navigateToPage(item.getAttribute('data-page'));
+    });
+  });
+
+  document.getElementById('menuToggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  // â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  async function loadDashboard() {
+    try {
+      var now = new Date();
+      var month = now.getMonth() + 1, year = now.getFullYear();
+      const { data, error } = await _sb.from('payroll')
+        .select('*, lecturers(name, nidn)')
+        .eq('period_month', month).eq('period_year', year);
+      if (error) throw error;
+
+      var totalGaji = 0, totalHadir = 0, totalTransport = 0, byCategory = {};
+      (data || []).forEach(function(p) {
+        var catCode = '-';
+        totalGaji      += parseFloat(p.total_salary) || 0;
+        totalHadir     += parseInt(p.total_attended_hours) || 0;
+        totalTransport += parseFloat(p.transportation_amount) || 0;
+        if (!byCategory[catCode]) byCategory[catCode] = { count:0, hours:0, salary:0 };
+        byCategory[catCode].count++;
+        byCategory[catCode].hours  += parseInt(p.total_attended_hours) || 0;
+        byCategory[catCode].salary += parseFloat(p.total_salary) || 0;
+      });
+
+      document.getElementById('statTotalGaji').textContent   = formatCurrency(totalGaji);
+      document.getElementById('statJumlahDosen').textContent = (data||[]).length;
+      document.getElementById('statJamHadir').textContent    = totalHadir + ' jam';
+      document.getElementById('statTransport').textContent   = formatCurrency(totalTransport);
+
+      var tbody = document.getElementById('summaryByCategory');
+      if (Object.keys(byCategory).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-6);">Belum ada data payroll bulan ini</td></tr>';
+      } else {
+        tbody.innerHTML = Object.keys(byCategory).sort().map(function(cat) {
+          var d = byCategory[cat];
+          return '<tr><td><span class="badge badge-blue">' + cat + '</span></td><td>' + d.count + ' dosen</td><td>' + d.hours + ' jam</td><td><strong>' + formatCurrency(d.salary) + '</strong></td></tr>';
+        }).join('');
+      }
+    } catch(e) { console.error('loadDashboard error:', e); }
+  }
+
+  // â”€â”€ PAYROLL TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  async function loadFinPayroll() {
+    var month = parseInt(document.getElementById('finPayrollMonth').value);
+    var year  = parseInt(document.getElementById('finPayrollYear').value);
+    var tbody = document.getElementById('finPayrollTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
+    try {
+      const { data, error } = await _sb.from('payroll')
+        .select('*, lecturers(name, nidn)')
+        .eq('period_month', month).eq('period_year', year)
+        .order('lecturers(name)');
+      if (error) throw error;
+      finPayrollData = (data || []).map(function(p) {
+        return Object.assign({}, p, {
+          lecturer_name: p.lecturers?.name || '-',
+          nidn:          p.lecturers?.nidn || '-',
+          category_code: '-'
+        });
+      });
+
+      if (finPayrollData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--space-8);">Tidak ada data payroll untuk periode ini</td></tr>';
+        document.getElementById('finPayrollTotal').style.display = 'none';
+        return;
+      }
+
+      var grandTotal = 0;
+      tbody.innerHTML = finPayrollData.map(function(p) {
+        grandTotal += parseFloat(p.total_salary) || 0;
+        return '<tr>' +
+          '<td><strong>' + (p.lecturer_name || '-') + '</strong><br><small class="text-secondary">' + (p.nidn || '') + '</small></td>' +
+          '<td><span class="badge badge-blue">' + (p.category_code || '-') + '</span></td>' +
+          '<td style="text-align:center;">' + (p.total_scheduled_hours || 0) + '</td>' +
+          '<td style="text-align:center;">' + (p.total_attended_hours  || 0) + '</td>' +
+          '<td>' + formatCurrency(p.fixed_component_amount) + '</td>' +
+          '<td>' + formatCurrency(p.attendance_component_amount) + '</td>' +
+          '<td>' + formatCurrency(p.transportation_amount) + '</td>' +
+          '<td><strong style="color:var(--primary-500);">' + formatCurrency(p.total_salary) + '</strong></td>' +
+        '</tr>';
+      }).join('');
+
+      document.getElementById('finTotalDosen').textContent = finPayrollData.length;
+      document.getElementById('finTotalGaji').textContent  = formatCurrency(grandTotal);
+      document.getElementById('finPayrollTotal').style.display = 'flex';
+
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--space-8);color:var(--danger);">Gagal memuat data</td></tr>';
+    }
+  }
+
+  document.getElementById('loadFinPayrollBtn').addEventListener('click', loadFinPayroll);
+
+  // â”€â”€ EXPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  document.getElementById('finExportBtn').addEventListener('click', function() {
+    if (finPayrollData.length === 0) { showToast('Tidak ada data untuk diekspor', 'warning'); return; }
+    var month = getMonthName(parseInt(document.getElementById('finPayrollMonth').value));
+    var year  = document.getElementById('finPayrollYear').value;
+    var headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
+    var rows = finPayrollData.map(function(p) {
+      return [p.nidn||'', p.lecturer_name||'', p.category_code||'',
+        p.total_scheduled_hours||0, p.total_attended_hours||0,
+        p.fixed_component_amount||0, p.attendance_component_amount||0,
+        p.transportation_amount||0, p.total_salary||0].join(',');
+    });
+    var csv  = [headers.join(',')].concat(rows).join('\n');
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a'); a.href = url;
+    a.download = 'Payroll_' + month + '_' + year + '.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Data berhasil diekspor', 'success');
+  });
+
+  // â”€â”€ LAPORAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  var selectedReportType = 'monthly';
+  function generateReport(type) {
+    selectedReportType = type;
+    showToast('Pilih periode dan klik Download Laporan', 'info');
+  }
+
+  async function downloadReport() {
+    var month = parseInt(document.getElementById('reportMonth').value);
+    var year  = parseInt(document.getElementById('reportYear').value);
+    try {
+      showLoading();
+      const { data, error } = await _sb.from('payroll')
+        .select('*, lecturers(name, nidn)')
+        .eq('period_month', month).eq('period_year', year);
+      if (error) throw error;
+      var rows_data = (data || []).map(function(p) {
+        return Object.assign({}, p, {
+          lecturer_name: p.lecturers?.name || '-',
+          nidn:          p.lecturers?.nidn || '-',
+          category_code: '-'
+        });
+      });
+      if (rows_data.length === 0) { showToast('Tidak ada data untuk periode ini', 'warning'); return; }
+
+      var monthName = getMonthName(month);
+      var headers, rows;
+
+      if (selectedReportType === 'category') {
+        var byCategory = {};
+        rows_data.forEach(function(p) {
+          var cat = p.category_code || '-';
+          if (!byCategory[cat]) byCategory[cat] = { count:0, hours:0, salary:0 };
+          byCategory[cat].count++;
+          byCategory[cat].hours  += parseInt(p.total_attended_hours) || 0;
+          byCategory[cat].salary += parseFloat(p.total_salary) || 0;
+        });
+        headers = ['Kategori','Jumlah Dosen','Total Jam Hadir','Total Gaji'];
+        rows = Object.keys(byCategory).sort().map(function(cat) {
+          var d = byCategory[cat];
+          return [cat, d.count, d.hours, d.salary].join(',');
+        });
+      } else {
+        headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
+        rows = rows_data.map(function(p) {
+          return [p.nidn||'', p.lecturer_name||'', p.category_code||'',
+            p.total_scheduled_hours||0, p.total_attended_hours||0,
+            p.fixed_component_amount||0, p.attendance_component_amount||0,
+            p.transportation_amount||0, p.total_salary||0].join(',');
+        });
+      }
+
+      var csv  = [headers.join(',')].concat(rows).join('\n');
+      var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a'); a.href = url;
+      a.download = 'Laporan_' + selectedReportType + '_' + monthName + '_' + year + '.csv';
+      a.click(); URL.revokeObjectURL(url);
+      showToast('Laporan berhasil diunduh', 'success');
+    } catch(e) {
+      showToast('Gagal membuat laporan', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  (function init() {
+    // â”€â”€ ROUTE GUARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
+    if (!session || !session.user) {
+      window.location.href = 'index.html';
+      return;
+    }
+    var role = session.user.role || '';
+    if (role !== 'finance' && role !== 'admin' && role !== 'hr') {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    var email = session.user.email || 'keuangan@example.com';
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('userEmailSidebar').textContent = email;
+
+    var y = new Date().getFullYear();
+    var opts = '';
+    for (var i = y - 2; i <= y + 1; i++) opts += '<option value="' + i + '"' + (i === y ? ' selected' : '') + '>' + i + '</option>';
+    ['finPayrollYear','reportYear'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = opts;
+    });
+    var m = new Date().getMonth() + 1;
+    ['finPayrollMonth','reportMonth'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = m;
+    });
+
+    loadDashboard();
+  })();
+  </script>
+</body>
+</html>
+
+

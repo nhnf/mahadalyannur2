@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Sistem Akumulasi Gaji Dosen</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 50%, #7C3AED 100%);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      padding: var(--space-6);
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      padding: var(--space-8);
+      animation: fadeInUp 0.4s var(--ease-enter);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      background: var(--primary-500);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    .login-footer {
+      margin-top: var(--space-6);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .alert-error {
+      display: none;
+      margin-bottom: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: var(--radius-md);
+      color: #DC2626;
+      font-size: 14px;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .alert-error.show {
+      display: flex;
+    }
+
+    .alert-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-message {
+      font-weight: 500;
+    }
+
+    @media (max-width: 767px) {
+      .login-container {
+        padding: var(--space-4);
+      }
+
+      .login-card {
+        padding: var(--space-6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="login-logo">G</div>
+        <h1 class="login-title">Sistem Akumulasi Gaji Dosen</h1>
+        <p class="login-subtitle">Masuk ke akun Anda untuk melanjutkan</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div class="alert alert-danger alert-error" id="loginError">
+        <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="alert-content">
+          <div class="alert-message" id="loginErrorMessage"></div>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            class="input" 
+            placeholder="nama@example.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            class="input" 
+            placeholder="Masukkan password"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+          <span id="loginBtnText">Masuk</span>
+          <div class="spinner spinner-sm" id="loginSpinner" style="display: none;"></div>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>&copy; 2026 Sistem Akumulasi Gaji Dosen. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apps Script Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
+  
+  <script>
+    var loginForm    = document.getElementById('loginForm');
+    var loginBtn     = document.getElementById('loginBtn');
+    var loginBtnText = document.getElementById('loginBtnText');
+    var loginSpinner = document.getElementById('loginSpinner');
+    var loginError   = document.getElementById('loginError');
+    var loginErrMsg  = document.getElementById('loginErrorMessage');
+
+    function redirectByRole(role) {
+      if (role === 'admin' || role === 'hr') {
+        window.location.href = 'dashboard-admin.html';
+      } else if (role === 'finance') {
+        window.location.href = 'dashboard-finance.html';
+      } else {
+        window.location.href = 'dashboard-lecturer.html';
+      }
+    }
+
+    // Cek session yang sudah ada
+    auth.getSession().then(function(res) {
+      if (res.data && res.data.session) {
+        redirectByRole(res.data.session.user.role || 'lecturer');
+      }
+    });
+
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var email    = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+
+      loginBtn.disabled      = true;
+      loginBtnText.textContent = 'Memproses...';
+      loginSpinner.style.display = 'block';
+      loginError.classList.remove('show');
+
+      var result = await auth.signInWithPassword({ email: email, password: password });
+
+      if (result.error) {
+        loginErrMsg.textContent = result.error.message || 'Email atau password salah';
+        loginError.classList.add('show');
+        loginBtn.disabled      = false;
+        loginBtnText.textContent = 'Masuk';
+        loginSpinner.style.display = 'none';
+        return;
+      }
+
+      redirectByRole(result.data.user.role || 'lecturer');
+    });
+  </script>
+</body>
+</html>

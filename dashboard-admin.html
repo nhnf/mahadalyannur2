@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin - Sistem Akumulasi Gaji Dosen</title>
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard-admin.html" class="sidebar-logo">
+          <div class="sidebar-logo-icon">G</div>
+          <span class="sidebar-logo-text">Gaji Dosen</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-page="dashboard">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#categories" class="nav-item" data-page="categories">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+          <span>Kategori</span>
+        </a>
+        <a href="#matkul" class="nav-item" data-page="matkul">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          <span>Mata Kuliah</span>
+        </a>
+        <a href="#lecturers" class="nav-item" data-page="lecturers">          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          <span>Dosen</span>
+        </a>
+        <a href="#schedules" class="nav-item" data-page="schedules">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span>Jadwal</span>
+        </a>
+        <a href="#attendance" class="nav-item" data-page="attendance">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+          <span>Presensi</span>
+        </a>
+        <a href="#payroll" class="nav-item" data-page="payroll">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Payroll</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" id="logoutBtn" style="width:100%;justify-content:flex-start;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-header-content">
+          <div>
+            <button class="menu-toggle" id="menuToggle">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+          </div>
+          <div class="page-actions">
+            <div class="flex items-center gap-3">
+              <span class="body-sm text-secondary" id="userEmail"></span>
+              <div class="avatar avatar-md" style="background:var(--primary-500);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;">A</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page-content">
+          <h1 class="display-lg mb-6">Dashboard</h1>
+          <div class="content-grid content-grid-4 mb-6">
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Dosen</div>
+                <div class="stat-card-value" id="totalLecturers">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-green">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Jadwal Bulan Ini</div>
+                <div class="stat-card-value" id="totalSchedules">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-amber">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Pending Presensi</div>
+                <div class="stat-card-value" id="pendingAttendance">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-purple">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Gaji Bulan Ini</div>
+                <div class="stat-card-value" id="totalPayroll">Rp 0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2 class="card-title">Aktivitas Terbaru</h2></div>
+            <div class="card-body">
+              <div class="empty-state">
+                <div class="empty-state-title">Belum Ada Aktivitas</div>
+                <div class="empty-state-description">Aktivitas terbaru akan muncul di sini</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORIES PAGE -->
+        <div id="page-categories" class="page-content" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h1 class="display-lg">Kategori Mata Kuliah</h1>
+              <p class="body-sm text-secondary">Kategori menentukan tarif per jam untuk setiap mata kuliah</p>
+            </div>
+            <button class="btn btn-primary" id="addCategoryBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Tambah Kategori</span>
+            </button>
+          </div>
+          <div class="data-table-wrapper">
+            <div class="table-container">
+              <table class="table">
+                <thead><tr><th>Kode</th><th>Tarif per Jam</th><th>Deskripsi</th><th>Aksi</th></tr></thead>
+                <tbody id="categoriesTableBody">
+                  <tr><td colspan="4" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- MATKUL PAGE -->
+        <div id="page-matkul" class="page-content" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="display-lg">Mata Kuliah</h1>
+            <div style="display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:var(--radius-lg);">
+              <button id="matkulListTab" class="btn btn-sm btn-primary" style="border-radius:var(--radius-md);">Daftar Matkul</button>
+              <button id="matkulTarifTab" class="btn btn-sm btn-ghost" style="border-radius:var(--radius-md);">Tarif per Semester</button>
+            </div>
+          </div>
+
+          <!-- Panel Daftar Matkul -->
+          <div id="matkulListPanel">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-4);">
+              <button class="btn btn-primary" id="addMatkulBtn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Tambah Mata Kuliah</span>
+              </button>
+            </div>
+            <div class="data-table-wrapper">
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Kode</th>
+                      <th>Nama Mata Kuliah</th>
+                      <th style="text-align:center;">SKS</th>
+                      <th style="text-align:center;">Jadwal</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="matkulTableBody">
+                    <tr><td colspan="5" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel Tarif per Semester -->
+          <div id="matkulTarifPanel" style="display:none;">
+            <div class="card mb-4" style="background:var(--info-bg);border-color:var(--info);">
+              <div class="card-body" style="padding:var(--space-3) var(--space-4);">
+                <p style="font-size:13px;color:var(--info-text);margin:0;">
+                  💡 Isi tarif per jam (Rp) untuk setiap kombinasi mata kuliah dan semester. Kosongkan jika tidak ada jadwal. Klik <strong>Simpan Semua Tarif</strong> setelah selesai.
+                </p>
+              </div>
+            </div>
+            <div id="matkulTarifContainer">
+              <div style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LECTURERS PAGE -->
+        <div id="page-lecturers" class="page-content" style="display:none;">
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="display-lg">Data Dosen</h1>
+            <button class="btn btn-primary" id="addLecturerBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Tambah Dosen</span>
+            </button>
+          </div>
+          <div class="data-table-wrapper">
+            <div class="data-table-header">
+              <div class="data-table-search">
+                <svg class="data-table-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" class="input" placeholder="Cari dosen..." id="searchLecturer">
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead><tr><th>NIDN</th><th>Nama</th><th>Email</th><th>Telepon</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="lecturersTableBody">
+                  <tr><td colspan="6" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCHEDULES PAGE -->
+        <div id="page-schedules" class="page-content" style="display:none;">
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="display-lg">Jadwal Mengajar</h1>
+            <button class="btn btn-primary" id="addScheduleBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Tambah Jadwal</span>
+            </button>
+          </div>
+
+          <!-- Filter Dosen -->
+          <div class="data-table-wrapper" style="margin-bottom:var(--space-4);">
+            <div class="data-table-header">
+              <div class="data-table-search">
+                <svg class="data-table-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <select class="input" id="filterScheduleLecturer" style="border:none;background:transparent;cursor:pointer;">
+                  <option value="">Semua Dosen</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabel Grid Jadwal -->
+          <div id="scheduleTableContainer">
+            <div style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- ATTENDANCE PAGE -->
+        <div id="page-attendance" class="page-content" style="display:none;">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="display-lg">Presensi Kehadiran</h1>
+            <div style="display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:var(--radius-lg);">
+              <button id="attendanceInputTab" class="btn btn-sm btn-primary" style="border-radius:var(--radius-md);">Input Presensi</button>
+              <button id="attendanceSummaryTab" class="btn btn-sm btn-ghost" style="border-radius:var(--radius-md);">Rekap Kehadiran</button>
+            </div>
+          </div>
+
+          <!-- Panel Input Presensi -->
+          <div id="attendanceInputPanel">
+            <div class="filter-panel">
+              <div class="filter-panel-header"><h3 class="filter-panel-title">Periode Presensi</h3></div>
+              <div class="filter-panel-body">
+                <div class="form-group">
+                  <label class="form-label">Bulan</label>
+                  <select class="select" id="filterAttendanceMonth">
+                    <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                    <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                    <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tahun</label>
+                  <select class="select" id="filterAttendanceYear"></select>
+                </div>
+              </div>
+              <div class="filter-panel-footer">
+                <button class="btn btn-primary btn-sm" id="applyAttendanceFilter">Tampilkan</button>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3);flex-wrap:wrap;gap:var(--space-2);">
+              <div id="attendanceQuickSummary"></div>
+              <div style="display:flex;gap:var(--space-2);">
+                <button class="btn btn-secondary btn-sm" id="markAllPresentBtn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  <span>Hadir Semua</span>
+                </button>
+                <button class="btn btn-primary btn-sm" id="saveAttendanceBtn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                  <span>Simpan Presensi</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="data-table-wrapper">
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Dosen</th>
+                      <th>Sesi / Semester</th>
+                      <th>Mata Kuliah</th>
+                      <th style="text-align:center;">Pertemuan</th>
+                      <th style="text-align:center;">Hadir</th>
+                      <th style="min-width:120px;">%</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendanceTableBody">
+                    <tr><td colspan="6" style="text-align:center;padding:var(--space-8);">
+                      <div class="empty-state">
+                        <div class="empty-state-title">Pilih Periode</div>
+                        <div class="empty-state-description">Pilih bulan dan tahun lalu klik Tampilkan</div>
+                      </div>
+                    </td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel Rekap Kehadiran -->
+          <div id="attendanceSummaryPanel" style="display:none;">
+            <div class="filter-panel">
+              <div class="filter-panel-header"><h3 class="filter-panel-title">Periode Rekap</h3></div>
+              <div class="filter-panel-body">
+                <div class="form-group">
+                  <label class="form-label">Bulan</label>
+                  <select class="select" id="summaryMonth">
+                    <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                    <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                    <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tahun</label>
+                  <select class="select" id="summaryYear"></select>
+                </div>
+              </div>
+              <div class="filter-panel-footer">
+                <button class="btn btn-primary btn-sm" id="loadSummaryBtn">Tampilkan Rekap</button>
+              </div>
+            </div>
+            <div id="attendanceSummaryContainer">
+              <div style="text-align:center;padding:var(--space-8);">Pilih periode dan klik Tampilkan Rekap</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYROLL PAGE -->
+        <div id="page-payroll" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Payroll Gaji Dosen</h1>
+          <div class="filter-panel">
+            <div class="filter-panel-header"><h3 class="filter-panel-title">Periode Payroll</h3></div>
+            <div class="filter-panel-body">
+              <div class="form-group">
+                <label class="form-label">Bulan</label>
+                <select class="select" id="filterPayrollMonth">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun</label>
+                <select class="select" id="filterPayrollYear"></select>
+              </div>
+            </div>
+            <div class="filter-panel-footer">
+              <button class="btn btn-primary" id="calculatePayrollBtn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                <span>Hitung Payroll</span>
+              </button>
+            </div>
+          </div>
+          <div class="data-table-wrapper">
+            <div class="data-table-header">
+              <div class="data-table-actions">
+                <button class="btn btn-secondary btn-sm" id="exportExcelBtn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Nama Dosen</th><th>Kategori</th><th>Jam Jadwal</th><th>Jam Hadir</th>
+                    <th>Gaji Tetap</th><th>Gaji Kehadiran</th><th>Transport</th><th>Total Gaji</th><th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="payrollTableBody">
+                  <tr><td colspan="9" style="text-align:center;padding:var(--space-8);">
+                    <div class="empty-state">
+                      <div class="empty-state-title">Belum Ada Data</div>
+                      <div class="empty-state-description">Klik "Hitung Payroll" untuk menghitung gaji</div>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end page-body -->
+    </main>
+  </div><!-- end app-container -->
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="spinner spinner-lg"></div>
+  </div>
+
+  <!-- Modal: Mata Kuliah -->
+  <div class="modal-overlay" id="matkulModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="matkulModalTitle">Tambah Mata Kuliah</h2>
+        <button class="modal-close" id="closeMatkulModal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="matkulForm">
+          <input type="hidden" id="matkulId">
+          <div class="form-group">
+            <label class="form-label">Kode</label>
+            <input type="text" id="matkulKode" class="input" placeholder="FIKIH, NAHWU, dst" required maxlength="30"
+              style="text-transform:uppercase;">
+            <small class="form-error" style="color:var(--text-tertiary);font-size:11px;">Huruf kapital, tanpa spasi (gunakan _)</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Mata Kuliah</label>
+            <input type="text" id="matkulNama" class="input" placeholder="Fikih, Nahwu, dst" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">SKS</label>
+            <input type="number" id="matkulSks" class="input" value="2" min="0" max="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deskripsi</label>
+            <textarea id="matkulDeskripsi" class="input" placeholder="Deskripsi singkat (opsional)"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelMatkulBtn">Batal</button>
+        <button class="btn btn-primary" id="saveMatkulBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Category -->
+  <div class="modal-overlay" id="categoryModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="categoryModalTitle">Tambah Kategori</h2>
+        <button class="modal-close" id="closeCategoryModal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="categoryForm">
+          <input type="hidden" id="categoryId">
+          <div class="form-group">
+            <label class="form-label">Kode Kategori</label>
+            <input type="text" id="categoryCode" class="input" placeholder="A, B, C" required maxlength="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tarif per Jam (Rp)</label>
+            <input type="number" id="hourlyRate" class="input" placeholder="60000" required min="0" step="1000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deskripsi</label>
+            <textarea id="categoryDescription" class="input" placeholder="Deskripsi kategori"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelCategoryBtn">Batal</button>
+        <button class="btn btn-primary" id="saveCategoryBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Lecturer -->
+  <div class="modal-overlay" id="lecturerModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="lecturerModalTitle">Tambah Dosen</h2>
+        <button class="modal-close" id="closeLecturerModal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="lecturerForm">
+          <input type="hidden" id="lecturerId">
+          <div class="form-group">
+            <label class="form-label">NIDN</label>
+            <input type="text" id="lecturerNidn" class="input" placeholder="1234567890" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Lengkap</label>
+            <input type="text" id="lecturerName" class="input" placeholder="Ust. Ahmad" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="lecturerEmail" class="input" placeholder="ahmad@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telepon</label>
+            <input type="tel" id="lecturerPhone" class="input" placeholder="08123456789">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelLecturerBtn">Batal</button>
+        <button class="btn btn-primary" id="saveLecturerBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Schedule -->
+  <div class="modal-overlay" id="scheduleModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Tambah Jadwal</h2>
+        <button class="modal-close" id="closeScheduleModal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="scheduleForm">
+          <div class="form-group">
+            <label class="form-label">Dosen</label>
+            <select id="scheduleLecturer" class="select" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hari</label>
+            <select id="scheduleDay" class="select" required>
+              <option value="">Pilih Hari</option>
+              <option value="Sabtu">Sabtu</option>
+              <option value="Ahad">Ahad</option>
+              <option value="Senin">Senin</option>
+              <option value="Selasa">Selasa</option>
+              <option value="Rabu">Rabu</option>
+              <option value="Kamis">Kamis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Semester / Kelas</label>
+            <select id="scheduleSemester" class="select" required>
+              <option value="">Pilih Semester</option>
+              <option value="2A">2A</option>
+              <option value="2B">2B</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+            </select>
+            <small style="font-size:11px;color:var(--text-tertiary);">2A dan 2B ditampilkan bersama di tabel jadwal</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mata Kuliah</label>
+            <select id="scheduleMatkulId" class="select" style="margin-bottom:6px;">
+              <option value="">-- Pilih dari daftar --</option>
+            </select>
+            <input type="text" id="scheduleMatkul" class="input" placeholder="Atau ketik nama mata kuliah">
+            <small style="font-size:11px;color:var(--text-tertiary);">Pilih dari dropdown atau ketik manual</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sesi Jam</label>
+            <div class="flex gap-2" style="flex-wrap:wrap;">
+              <label class="flex items-center gap-2"><input type="checkbox" class="checkbox" name="sessionSlot" value="1"><span>Pagi 1</span></label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="checkbox" name="sessionSlot" value="2"><span>Pagi 2</span></label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="checkbox" name="sessionSlot" value="3"><span>Sore</span></label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="checkbox" name="sessionSlot" value="4"><span>Malam</span></label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea id="scheduleNotes" class="input" placeholder="Catatan tambahan"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelScheduleBtn">Batal</button>
+        <button class="btn btn-primary" id="saveScheduleBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Payroll Detail -->
+  <div class="modal-overlay" id="payrollDetailModal" style="display:none;">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Detail Slip Gaji</h2>
+        <button class="modal-close" id="closePayrollDetailModal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:var(--space-4);">
+          <div style="font-size:18px;font-weight:700;" id="detailPayrollName">-</div>
+          <div style="color:var(--text-secondary);font-size:13px;">
+            NIDN: <span id="detailPayrollNidn">-</span> &nbsp;|&nbsp;
+            Kategori: <span id="detailPayrollKategori">-</span>
+          </div>
+          <div style="color:var(--text-secondary);font-size:13px;">Periode: <span id="detailPayrollPeriode">-</span></div>
+        </div>
+        <div class="divider"></div>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <td style="padding:8px 0;color:var(--text-secondary);">Jam Terjadwal</td>
+            <td style="padding:8px 0;text-align:right;" id="detailJamJadwal">-</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <td style="padding:8px 0;color:var(--text-secondary);">Jam Hadir</td>
+            <td style="padding:8px 0;text-align:right;" id="detailJamHadir">-</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <td style="padding:8px 0;color:var(--text-secondary);">Gaji Tetap (50%)</td>
+            <td style="padding:8px 0;text-align:right;" id="detailGajiTetap">-</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <td style="padding:8px 0;color:var(--text-secondary);">Gaji Kehadiran (50%)</td>
+            <td style="padding:8px 0;text-align:right;" id="detailGajiHadir">-</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <td style="padding:8px 0;color:var(--text-secondary);">Uang Transportasi</td>
+            <td style="padding:8px 0;text-align:right;" id="detailTransport">-</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 0;font-weight:700;font-size:15px;">Total Gaji</td>
+            <td style="padding:12px 0;text-align:right;font-weight:700;font-size:18px;color:var(--primary-500);" id="detailTotalGaji">-</td>
+          </tr>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="closePayrollDetailModal2" onclick="closePayrollDetailModal()">Tutup</button>
+        <button class="btn btn-primary" onclick="printSlip(document.getElementById('detailPayrollName').dataset.id)">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          Cetak Slip
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- App Client -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/modules/categories.js"></script>
+  <script src="js/modules/matkul.js"></script>
+  <script src="js/modules/matkul_tarif.js"></script>
+  <script src="js/modules/lecturers.js"></script>
+  <script src="js/modules/schedules.js"></script>
+  <script src="js/modules/attendance.js"></script>
+  <script src="js/modules/payroll.js"></script>
+
+  <script>
+  // ── NAVIGATION ──────────────────────────────────────────────
+  function navigateToPage(page) {
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    var navEl = document.querySelector('[data-page="' + page + '"]');
+    if (navEl) navEl.classList.add('active');
+
+    document.querySelectorAll('.page-content').forEach(function(el) { el.style.display = 'none'; });
+    var pageEl = document.getElementById('page-' + page);
+    if (pageEl) pageEl.style.display = 'block';
+
+    if (page === 'dashboard')   loadDashboardStats();
+    if (page === 'categories')  { if (typeof loadCategories  === 'function') loadCategories(); }
+    if (page === 'matkul') {
+      if (typeof loadMatkul === 'function') loadMatkul();
+      // Setup tab switching
+      var listTab  = document.getElementById('matkulListTab');
+      var tarifTab = document.getElementById('matkulTarifTab');
+      if (listTab && !listTab._tabInit) {
+        listTab._tabInit = true;
+        listTab.addEventListener('click', function() {
+          document.getElementById('matkulListPanel').style.display  = 'block';
+          document.getElementById('matkulTarifPanel').style.display = 'none';
+          listTab.className  = 'btn btn-sm btn-primary';
+          tarifTab.className = 'btn btn-sm btn-ghost';
+        });
+        tarifTab.addEventListener('click', function() {
+          document.getElementById('matkulListPanel').style.display  = 'none';
+          document.getElementById('matkulTarifPanel').style.display = 'block';
+          tarifTab.className = 'btn btn-sm btn-primary';
+          listTab.className  = 'btn btn-sm btn-ghost';
+          if (typeof loadMatkulTarif === 'function') loadMatkulTarif();
+        });
+      }
+    }
+    if (page === 'lecturers')   { if (typeof loadLecturers   === 'function') loadLecturers(); }
+    if (page === 'schedules')   { if (typeof loadSchedules   === 'function') loadSchedules(); }
+  }
+
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      navigateToPage(item.getAttribute('data-page'));
+    });
+  });
+
+  document.getElementById('menuToggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    if (typeof auth !== 'undefined') auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  // ── DASHBOARD STATS ─────────────────────────────────────────
+  async function loadDashboardStats() {
+    try {
+      var now = new Date();
+      var month = now.getMonth() + 1;
+      var year  = now.getFullYear();
+
+      const [lecRes, schRes, payRes] = await Promise.all([
+        _sb.from('lecturers').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+        _sb.from('schedules').select('status').is('deleted_at', null),
+        _sb.from('payroll').select('total_salary').eq('period_month', month).eq('period_year', year)
+      ]);
+
+      document.getElementById('totalLecturers').textContent = lecRes.count || 0;
+      var schs = schRes.data || [];
+      document.getElementById('totalSchedules').textContent    = schs.length;
+      document.getElementById('pendingAttendance').textContent = schs.filter(function(s) { return s.status === 'pending'; }).length;
+      var total = (payRes.data || []).reduce(function(s, p) { return s + (parseFloat(p.total_salary)||0); }, 0);
+      document.getElementById('totalPayroll').textContent = formatCurrency(total);
+    } catch(e) { console.error('Stats error:', e); }
+  }
+
+  // ── UTILITIES ────────────────────────────────────────────────
+  function formatCurrency(n) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
+  }
+  function showToast(msg, type) {
+    type = type || 'info';
+    var c = document.getElementById('toastContainer');
+    var t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.innerHTML = '<div class="toast-message">' + msg + '</div>';
+    c.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3000);
+  }
+  function showLoading() { var e = document.getElementById('loadingOverlay'); if(e) e.style.display = 'flex'; }
+  function hideLoading() { var e = document.getElementById('loadingOverlay'); if(e) e.style.display = 'none'; }
+  function debounce(fn, ms) { var t; return function() { clearTimeout(t); t = setTimeout(fn, ms); }; }
+  function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  // ── YEAR DROPDOWNS ───────────────────────────────────────────
+  (function initYears() {
+    var y = new Date().getFullYear();
+    var opts = '';
+    for (var i = y - 2; i <= y + 1; i++) opts += '<option value="' + i + '"' + (i === y ? ' selected' : '') + '>' + i + '</option>';
+    ['filterScheduleYear','filterPayrollYear','summaryYear','filterAttendanceYear'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = opts;
+    });
+    var m = new Date().getMonth() + 1;
+    ['filterScheduleMonth','filterPayrollMonth','summaryMonth','filterAttendanceMonth'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = m;
+    });
+  })();
+
+  // ── INIT ─────────────────────────────────────────────────────
+  (function initApp() {
+    // ── ROUTE GUARD ──────────────────────────────────────────
+    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
+    if (!session || !session.user) {
+      window.location.href = 'index.html';
+      return;
+    }
+    // Pastikan role sesuai
+    var role = session.user.role || '';
+    if (role !== 'admin' && role !== 'hr') {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    // Tampilkan email dari session
+    document.getElementById('userEmail').textContent = session.user.email || 'admin@example.com';
+
+    // Init semua modul (pasang event listeners)
+    if (typeof initCategoriesModule  === 'function') initCategoriesModule();
+    if (typeof initMatkulModule      === 'function') initMatkulModule();
+    if (typeof initMatkulTarifModule === 'function') initMatkulTarifModule();
+    if (typeof initLecturersModule  === 'function') initLecturersModule();
+    if (typeof initSchedulesModule  === 'function') initSchedulesModule();
+    if (typeof initAttendanceModule === 'function') initAttendanceModule();
+    if (typeof initPayrollModule    === 'function') initPayrollModule();
+
+    // Load categories dulu agar dropdown terisi, lalu matkul, lalu lecturers
+    if (typeof loadCategories === 'function') {
+      loadCategories().then(function() {
+        if (typeof loadMatkul    === 'function') loadMatkul();
+        if (typeof loadLecturers === 'function') loadLecturers();
+      }).catch(function() {
+        if (typeof loadMatkul    === 'function') loadMatkul();
+        if (typeof loadLecturers === 'function') loadLecturers();
+      });
+    }
+
+    // Load stats dashboard
+    loadDashboardStats();
+  })();
+  </script>
+</body>
+</html>
