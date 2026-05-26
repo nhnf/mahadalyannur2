@@ -242,6 +242,8 @@
   <div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner spinner-lg"></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- App Config (credentials — tidak di-commit ke git) -->
+  <script src="config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
 
@@ -350,8 +352,8 @@
       tbody.innerHTML = finPayrollData.map(function(p) {
         grandTotal += parseFloat(p.total_salary) || 0;
         return '<tr>' +
-          '<td><strong>' + (p.lecturer_name || '-') + '</strong><br><small class="text-secondary">' + (p.nidn || '') + '</small></td>' +
-          '<td><span class="badge badge-blue">' + (p.category_code || '-') + '</span></td>' +
+          '<td><strong>' + escapeHtml(p.lecturer_name || '-') + '</strong><br><small class="text-secondary">' + escapeHtml(p.nidn || '') + '</small></td>' +
+          '<td><span class="badge badge-blue">' + escapeHtml(p.category_code || '-') + '</span></td>' +
           '<td style="text-align:center;">' + (p.total_scheduled_hours || 0) + '</td>' +
           '<td style="text-align:center;">' + (p.total_attended_hours  || 0) + '</td>' +
           '<td>' + formatCurrency(p.fixed_component_amount) + '</td>' +
@@ -379,10 +381,17 @@
     var year  = document.getElementById('finPayrollYear').value;
     var headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
     var rows = finPayrollData.map(function(p) {
-      return [p.nidn||'', p.lecturer_name||'', p.category_code||'',
-        p.total_scheduled_hours||0, p.total_attended_hours||0,
-        p.fixed_component_amount||0, p.attendance_component_amount||0,
-        p.transportation_amount||0, p.total_salary||0].join(',');
+      return [
+        escapeCsv(p.nidn||''),
+        escapeCsv(p.lecturer_name||''),
+        escapeCsv(p.category_code||''),
+        p.total_scheduled_hours||0,
+        p.total_attended_hours||0,
+        p.fixed_component_amount||0,
+        p.attendance_component_amount||0,
+        p.transportation_amount||0,
+        p.total_salary||0
+      ].join(',');
     });
     var csv  = [headers.join(',')].concat(rows).join('\n');
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -438,10 +447,17 @@
       } else {
         headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
         rows = rows_data.map(function(p) {
-          return [p.nidn||'', p.lecturer_name||'', p.category_code||'',
-            p.total_scheduled_hours||0, p.total_attended_hours||0,
-            p.fixed_component_amount||0, p.attendance_component_amount||0,
-            p.transportation_amount||0, p.total_salary||0].join(',');
+          return [
+            escapeCsv(p.nidn||''),
+            escapeCsv(p.lecturer_name||''),
+            escapeCsv(p.category_code||''),
+            p.total_scheduled_hours||0,
+            p.total_attended_hours||0,
+            p.fixed_component_amount||0,
+            p.attendance_component_amount||0,
+            p.transportation_amount||0,
+            p.total_salary||0
+          ].join(',');
         });
       }
 

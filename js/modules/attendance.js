@@ -20,7 +20,8 @@ async function loadAttendance() {
     const { data: schedules, error: schErr } = await _sb
       .from('schedules')
       .select('lecturer_id, mata_kuliah_id, day_of_week, session_slot, mata_kuliah')
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .not('lecturer_id', 'is', null);  // hanya jadwal yang punya dosen
     if (schErr) throw schErr;
 
     if (!schedules || schedules.length === 0) {
@@ -29,11 +30,9 @@ async function loadAttendance() {
     }
 
     // Deduplikasi: key = lecturer_id|matkul_id|hari|sesi
-    // Skip jadwal tanpa dosen (tidak perlu presensi)
     var seen = {};
     var unique = [];
     schedules.forEach(function(s) {
-      if (!s.lecturer_id) return; // skip tanpa dosen
       var key = [s.lecturer_id, s.mata_kuliah_id||'', s.day_of_week, s.session_slot].join('|');
       if (!seen[key]) {
         seen[key] = true;
@@ -58,10 +57,12 @@ async function loadAttendance() {
       };
     });
 
-    await _sb.from('attendance_monthly').upsert(toInsert, {
-      onConflict: 'lecturer_id,mata_kuliah_id,day_of_week,session_slot,period_month,period_year',
-      ignoreDuplicates: true
-    });
+    if (toInsert.length > 0) {
+      await _sb.from('attendance_monthly').upsert(toInsert, {
+        onConflict: 'lecturer_id,mata_kuliah_id,day_of_week,session_slot,period_month,period_year',
+        ignoreDuplicates: true
+      });
+    }
 
     // 4. Ambil data attendance bulan ini via view
     const { data: attData, error: attErr } = await _sb
@@ -138,25 +139,25 @@ function renderAttendanceTable() {
       var barColor = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--warning)' : 'var(--danger)';
       var tarif    = parseFloat(a.tarif_per_jam || 0);
       var tarifTxt = tarif > 0
-        ? '<span class="badge badge-blue" style="font-size:10px;">' + (a.category_code||'?') + ' — ' + formatCurrency(tarif) + '</span>'
+        ? '<span class="badge badge-blue" style="font-size:10px;">' + escapeHtml(a.category_code||'?') + ' — ' + formatCurrency(tarif) + '</span>'
         : '<span class="badge badge-gray" style="font-size:10px;">Tarif belum diset</span>';
 
-      html += '<tr data-att-id="' + a.id + '">';
+      html += '<tr data-att-id="' + escapeHtml(a.id) + '">';
 
       // Nama dosen (rowspan)
       if (idx === 0) {
         html += '<td rowspan="' + rows.length + '" style="vertical-align:middle;font-weight:600;border-right:2px solid var(--card-border);">' +
-          name + '<br><small class="text-secondary">' + (a.nidn||'') + '</small>' +
+          escapeHtml(name) + '<br><small class="text-secondary">' + escapeHtml(a.nidn||'') + '</small>' +
         '</td>';
       }
 
       html += '<td>' +
-        '<span class="badge badge-blue" style="margin-right:4px;">' + (SESI_LABEL[a.session_slot]||'Jam '+a.session_slot) + '</span>' +
-        '<small class="text-secondary">' + (a.day_of_week||'') + '</small>' +
+        '<span class="badge badge-blue" style="margin-right:4px;">' + escapeHtml(SESI_LABEL[a.session_slot]||'Jam '+a.session_slot) + '</span>' +
+        '<small class="text-secondary">' + escapeHtml(a.day_of_week||'') + '</small>' +
       '</td>';
 
       html += '<td>' +
-        '<div style="font-size:13px;">' + (a.matkul_nama||a.mata_kuliah||'-') + '</div>' +
+        '<div style="font-size:13px;">' + escapeHtml(a.matkul_nama||a.mata_kuliah||'-') + '</div>' +
         '<div style="margin-top:2px;">' + tarifTxt + '</div>' +
       '</td>';
 
@@ -219,7 +220,7 @@ function markAllPresent() {
     var meetInp  = row.querySelector('[data-field="meetings"]');
     var hadirInp = row.querySelector('[data-field="hadir"]');
     if (!meetInp || !hadirInp) return;
-    hadirInp.value = meetInp.value; // hadir = pertemuan
+    hadirInp.value = meetInp.value;
     updatePctDisplay(hadirInp);
   });
   showToast('Semua jadwal ditandai Hadir penuh', 'success');
@@ -256,7 +257,6 @@ async function saveAttendance() {
   if (rows.length === 0) { showToast('Tidak ada data untuk disimpan', 'warning'); return; }
   try {
     showLoading();
-    // Gunakan update per id (bukan upsert) agar tidak trigger NOT NULL constraint
     var promises = [];
     rows.forEach(function(row) {
       var id       = row.dataset.attId;
@@ -317,7 +317,7 @@ async function loadAttendanceSummary() {
       var pct = d.meetings > 0 ? Math.round((d.hadir/d.meetings)*100) : 0;
       var barColor = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--warning)' : 'var(--danger)';
       html += '<tr>' +
-        '<td><strong>' + n + '</strong><br><small class="text-secondary">' + (d.nidn||'') + '</small></td>' +
+        '<td><strong>' + escapeHtml(n) + '</strong><br><small class="text-secondary">' + escapeHtml(d.nidn||'') + '</small></td>' +
         '<td style="text-align:center;">' + d.meetings + '</td>' +
         '<td style="text-align:center;"><span class="badge badge-green">' + d.hadir + '</span></td>' +
         '<td style="min-width:140px;"><div style="display:flex;align-items:center;gap:8px;">' +

@@ -31,14 +31,14 @@ async function loadCategories() {
 
     tbody.innerHTML = categoriesCache.map(function(cat) {
       return '<tr>' +
-        '<td><span class="badge badge-blue">' + cat.category_code + '</span></td>' +
+        '<td><span class="badge badge-blue">' + escapeHtml(cat.category_code) + '</span></td>' +
         '<td><strong>' + formatCurrency(cat.hourly_rate) + '</strong></td>' +
-        '<td>' + (cat.description || '-') + '</td>' +
+        '<td>' + escapeHtml(cat.description || '-') + '</td>' +
         '<td>' +
-          '<button class="btn-icon" onclick="editCategory(\'' + cat.id + '\')" title="Edit">' +
+          '<button class="btn-icon" onclick="editCategory(\'' + escapeHtml(cat.id) + '\')" title="Edit">' +
             '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
           '</button>' +
-          '<button class="btn-icon" onclick="deleteCategory(\'' + cat.id + '\')" title="Hapus">' +
+          '<button class="btn-icon" onclick="deleteCategory(\'' + escapeHtml(cat.id) + '\')" title="Hapus">' +
             '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
           '</button>' +
         '</td>' +
@@ -56,13 +56,25 @@ async function loadCategories() {
 }
 
 function populateCategoryDropdowns(categories) {
-  // Kategori sekarang untuk mata kuliah, bukan dosen
+  // Dropdown untuk form dosen
+  var lecturerCatSel = document.getElementById('lecturerCategory');
+  if (lecturerCatSel) {
+    lecturerCatSel.innerHTML = '<option value="">-- Pilih Kategori --</option>' +
+      categories.map(function(c) {
+        return '<option value="' + escapeHtml(c.id) + '">' +
+          escapeHtml(c.category_code) + ' — Rp ' +
+          Number(c.hourly_rate).toLocaleString('id-ID') + '/jam</option>';
+      }).join('');
+  }
+
+  // Dropdown filter kategori
   var filterCatSel = document.getElementById('filterCategory');
   if (filterCatSel) {
     filterCatSel.innerHTML = '<option value="">Semua Kategori</option>' +
       categories.map(function(c) {
-        return '<option value="' + c.id + '">' + c.category_code +
-          ' — Rp ' + Number(c.hourly_rate).toLocaleString('id-ID') + '/jam</option>';
+        return '<option value="' + escapeHtml(c.id) + '">' +
+          escapeHtml(c.category_code) + ' — Rp ' +
+          Number(c.hourly_rate).toLocaleString('id-ID') + '/jam</option>';
       }).join('');
   }
 }
@@ -130,9 +142,13 @@ async function deleteCategory(id) {
     // Cek apakah masih dipakai dosen
     const { count } = await _sb.from('lecturers').select('*', { count: 'exact', head: true })
       .eq('category_id', id).is('deleted_at', null);
-    if (count > 0) { showToast('Kategori masih digunakan oleh ' + count + ' dosen', 'error'); return; }
+    if (count > 0) {
+      showToast('Kategori masih digunakan oleh ' + count + ' dosen', 'error');
+      return;
+    }
 
-    const { error } = await _sb.from('categories').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await _sb.from('categories')
+      .update({ deleted_at: new Date().toISOString() }).eq('id', id);
     if (error) throw error;
     showToast('Kategori berhasil dihapus', 'success');
     loadCategories();

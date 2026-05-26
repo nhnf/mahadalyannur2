@@ -1,10 +1,23 @@
 /**
  * Supabase Client
- * Koneksi ke Supabase project mahadalyannur2
+ * Koneksi ke Supabase project.
+ *
+ * KONFIGURASI: Salin .env.example ke config.js dan isi nilai yang sesuai.
+ * Jangan pernah commit nilai asli ke git.
  */
 
-const SUPABASE_URL  = 'https://unyfvjugdyrdirkdrifw.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVueWZ2anVnZHlyZGlya2RyaWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTM2MjMsImV4cCI6MjA5NTI4OTYyM30.J9694tJehud3vlWZccqcZVyb_xsHSjO9lyvN3twPPmw';
+// Ambil konfigurasi dari window.__APP_CONFIG__ yang di-inject oleh config.js
+var _cfg = (typeof window !== 'undefined' && window.__APP_CONFIG__) || {};
+
+var SUPABASE_URL  = _cfg.SUPABASE_URL  || '';
+var SUPABASE_ANON = _cfg.SUPABASE_ANON || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON) {
+  console.error(
+    '[GajiDosen] Konfigurasi Supabase tidak ditemukan.\n' +
+    'Salin config.example.js ke config.js dan isi SUPABASE_URL & SUPABASE_ANON.'
+  );
+}
 
 // Inisialisasi Supabase client (dari CDN)
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -29,17 +42,23 @@ var auth = {
 
       const { data: users, error } = await _sb
         .from('users')
-        .select('id, email, role, password_hash')
+        .select('id, email, role, password_hash, is_active')
         .eq('email', creds.email.trim().toLowerCase())
+        .is('deleted_at', null)
         .limit(1);
 
       if (error) throw error;
       if (!users || users.length === 0) throw new Error('Email tidak ditemukan');
 
       const user = users[0];
+      if (!user.is_active) throw new Error('Akun tidak aktif. Hubungi administrator.');
       if (user.password_hash !== hashHex) throw new Error('Password salah');
 
-      _session = { user: { id: user.id, email: user.email, role: user.role } };
+      _session = {
+        user: { id: user.id, email: user.email, role: user.role },
+        // Simpan waktu login untuk validasi expiry (8 jam)
+        loginAt: Date.now()
+      };
       localStorage.setItem('gd_session', JSON.stringify(_session));
       return { data: _session, error: null };
 
@@ -52,7 +71,18 @@ var auth = {
     if (!_session) {
       try {
         const stored = localStorage.getItem('gd_session');
-        if (stored) _session = JSON.parse(stored);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Validasi expiry: 8 jam
+          const SESSION_TTL = 8 * 60 * 60 * 1000;
+          if (parsed && parsed.loginAt && (Date.now() - parsed.loginAt) < SESSION_TTL) {
+            _session = parsed;
+          } else {
+            // Session kadaluarsa
+            localStorage.removeItem('gd_session');
+            _session = null;
+          }
+        }
       } catch(e) { _session = null; }
     }
     return { data: { session: _session }, error: null };
@@ -115,7 +145,6 @@ async function softDeleteData(table, id) {
 
 // ── PAYROLL CALCULATION ───────────────────────────────────────────────────────
 // Hitung dari attendance_monthly (1 baris = 1 dosen+matkul+hari+sesi per bulan)
-// Dosen yang mengajar matkul sama di 2 semester → dihitung 1 pertemuan
 
 async function calculatePayrollLocal(month, year) {
   const lecRes = await _sb.from('lecturers')
@@ -164,7 +193,6 @@ async function calculatePayrollLocal(month, year) {
     });
 
     // Transport: Rp 15.000 per pertemuan hadir
-    // (setiap baris = 1 sesi = 1 kunjungan)
     var transport = totalAttended * 15000;
 
     var total = fixed + attendance + transport;
@@ -190,5 +218,5 @@ async function calculatePayrollLocal(month, year) {
 }
 
 // ── EXPOSE GLOBAL ─────────────────────────────────────────────────────────────
-// Alias agar semua modul yang pakai 'auth' dan helper functions tetap jalan
-window._sb = _sb;
+window._sb  = _sb;
+window.auth = auth;

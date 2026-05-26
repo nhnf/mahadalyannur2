@@ -4,6 +4,32 @@
  */
 
 /**
+ * XSS Prevention — Escape HTML entities
+ * Gunakan ini setiap kali memasukkan data dari database ke innerHTML
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Escape nilai CSV — wrap dengan kutip jika mengandung koma, kutip, atau newline
+ */
+function escapeCsv(val) {
+  if (val === null || val === undefined) return '';
+  var s = String(val);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+/**
  * Currency Formatting
  */
 function formatCurrency(amount) {
@@ -203,6 +229,8 @@ function debounce(func, wait) {
  */
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    escapeHtml,
+    escapeCsv,
     formatCurrency,
     parseCurrency,
     formatDate,

@@ -256,12 +256,15 @@
   <div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner spinner-lg"></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- App Config (credentials — tidak di-commit ke git) -->
+  <script src="config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
 
   <script>
   var myLecturerId = null;
   var mySlipData   = null;
+  var myProfile    = null;  // simpan profil dosen untuk dipakai di slip
 
   // ── NAVIGATION ──────────────────────────────────────────────
   function navigateToPage(page) {
@@ -296,10 +299,13 @@
   // ── LOAD PROFIL DOSEN ────────────────────────────────────────
   async function loadMyProfile(email) {
     try {
-      const { data, error } = await _sb.from('v_lecturers_with_category').select('*').is('deleted_at', null);
+      // Query langsung filter by email — tidak ambil semua dosen
+      const { data, error } = await _sb.from('v_lecturers_with_category')
+        .select('*')
+        .eq('email', email.trim().toLowerCase())
+        .limit(1);
       if (error) throw error;
-      var lecturers = data || [];
-      var me = lecturers.find(function(l) { return l.email && l.email.trim().toLowerCase() === email.trim().toLowerCase(); });
+      var me = (data || [])[0];
 
       if (!me) {
         document.getElementById('greetName').textContent = email.split('@')[0];
@@ -313,6 +319,7 @@
       }
 
       myLecturerId = me.id;
+      myProfile    = me;  // simpan untuk slip gaji
       document.getElementById('greetName').textContent       = me.name || 'Dosen';
       document.getElementById('userNameSidebar').textContent = me.name || email;
       document.getElementById('userInitial').textContent     = (me.name || 'D').charAt(0).toUpperCase();
@@ -330,20 +337,27 @@
     try {
       var now = new Date();
       var month = now.getMonth() + 1, year = now.getFullYear();
-      var firstDay = year + '-' + String(month).padStart(2,'0') + '-01';
-      var lastDay  = new Date(year, month, 0).toISOString().split('T')[0];
 
-      const [schRes, payRes] = await Promise.all([
-        _sb.from('schedules').select('status').eq('lecturer_id', myLecturerId)
-          .is('deleted_at', null).gte('schedule_date', firstDay).lte('schedule_date', lastDay),
+      const [attRes, payRes] = await Promise.all([
+        // Gunakan attendance_monthly — tidak bergantung pada schedule_date
+        _sb.from('attendance_monthly')
+          .select('total_meetings, total_hadir')
+          .eq('lecturer_id', myLecturerId)
+          .eq('period_month', month)
+          .eq('period_year', year),
         _sb.from('payroll').select('total_salary').eq('lecturer_id', myLecturerId)
           .eq('period_month', month).eq('period_year', year).limit(1)
       ]);
 
-      var schedules = schRes.data || [];
-      document.getElementById('myTotalJadwal').textContent = schedules.length;
-      document.getElementById('myJamHadir').textContent    = schedules.filter(function(s) { return s.status === 'hadir'; }).length + ' jam';
-      document.getElementById('myPending').textContent     = schedules.filter(function(s) { return s.status === 'pending'; }).length;
+      var attList = attRes.data || [];
+      var totalJadwal  = attList.length;
+      var totalHadir   = attList.reduce(function(s, a) { return s + (a.total_hadir || 0); }, 0);
+      var totalMeeting = attList.reduce(function(s, a) { return s + (a.total_meetings || 0); }, 0);
+      var pending      = totalMeeting - totalHadir;
+
+      document.getElementById('myTotalJadwal').textContent = totalJadwal + ' jadwal';
+      document.getElementById('myJamHadir').textContent    = totalHadir + ' sesi';
+      document.getElementById('myPending').textContent     = pending > 0 ? pending : 0;
 
       var myPayroll = (payRes.data || [])[0];
       document.getElementById('myEstGaji').textContent = myPayroll ? formatCurrency(myPayroll.total_salary) : 'Belum dihitung';
@@ -353,29 +367,33 @@
   // ── JADWAL ───────────────────────────────────────────────────
   async function loadMySchedule() {
     if (!myLecturerId) { showToast('Data dosen belum dimuat', 'warning'); return; }
-    var month = parseInt(document.getElementById('myScheduleMonth').value);
-    var year  = parseInt(document.getElementById('myScheduleYear').value);
     var tbody = document.getElementById('myScheduleTableBody');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
     try {
-      var firstDay = year + '-' + String(month).padStart(2,'0') + '-01';
-      var lastDay  = new Date(year, month, 0).toISOString().split('T')[0];
-      const { data, error } = await _sb.from('schedules').select('*')
-        .eq('lecturer_id', myLecturerId).is('deleted_at', null)
-        .gte('schedule_date', firstDay).lte('schedule_date', lastDay)
-        .order('schedule_date').order('session_slot');
+      // Jadwal sekarang berbasis hari mingguan, bukan tanggal
+      const { data, error } = await _sb.from('v_schedules_with_lecturer')
+        .select('day_of_week, session_slot, semester, mata_kuliah, status, notes')
+        .eq('lecturer_id', myLecturerId);
       if (error) throw error;
       var schedules = data || [];
       if (schedules.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);">Tidak ada jadwal pada periode ini</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);">Tidak ada jadwal terdaftar</td></tr>';
         return;
       }
-      var statusBadge = { pending:'<span class="badge badge-amber">Pending</span>', hadir:'<span class="badge badge-green">Hadir</span>', absen:'<span class="badge badge-red">Absen</span>' };
+      var SESI_LABEL = {1:'Pagi 1', 2:'Pagi 2', 3:'Sore', 4:'Malam'};
+      var statusBadge = {
+        pending: '<span class="badge badge-amber">Pending</span>',
+        hadir:   '<span class="badge badge-green">Hadir</span>',
+        absen:   '<span class="badge badge-red">Absen</span>'
+      };
       tbody.innerHTML = schedules.map(function(s) {
-        return '<tr><td><strong>' + formatDate(s.schedule_date, 'short') + '</strong></td>' +
-          '<td><span class="badge badge-blue">Jam ' + s.session_slot + '</span></td>' +
+        return '<tr>' +
+          '<td><strong>' + escapeHtml(s.day_of_week||'-') + '</strong></td>' +
+          '<td><span class="badge badge-blue">' + escapeHtml(SESI_LABEL[s.session_slot]||'Jam '+s.session_slot) + '</span>' +
+            '<br><small class="text-secondary">Sem ' + escapeHtml(s.semester||'-') + '</small></td>' +
+          '<td>' + escapeHtml(s.mata_kuliah||'-') + '</td>' +
           '<td>' + (statusBadge[s.status]||'<span class="badge badge-gray">-</span>') + '</td>' +
-          '<td>' + (s.notes||'-') + '</td></tr>';
+        '</tr>';
       }).join('');
     } catch(e) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-8);color:var(--danger);">Gagal memuat jadwal</td></tr>';
@@ -430,16 +448,21 @@
     var p = mySlipData;
     var month = getMonthName(parseInt(document.getElementById('mySlipMonth').value));
     var year  = document.getElementById('mySlipYear').value;
+    var lecName = myProfile ? myProfile.name : '-';
+    var lecNidn = myProfile ? myProfile.nidn : '-';
+    var lecCat  = myProfile ? myProfile.category_code : '-';
     var win = window.open('', '_blank', 'width=600,height=700');
+    if (!win) { showToast('Popup diblokir browser. Izinkan popup untuk mencetak.', 'warning'); return; }
     win.document.write(
       '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Slip Gaji</title>' +
       '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;}h2{text-align:center;margin-bottom:4px;}.sub{text-align:center;color:#555;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}td{padding:8px 12px;border-bottom:1px solid #eee;}td:last-child{text-align:right;}.total td{font-weight:bold;font-size:16px;border-top:2px solid #333;border-bottom:none;}.footer{margin-top:40px;text-align:center;font-size:12px;color:#888;}</style>' +
       '</head><body>' +
-      '<h2>SLIP GAJI DOSEN</h2><div class="sub">Ma'had Aly An-Nur II | Periode: ' + month + ' ' + year + '</div>' +
+      '<h2>SLIP GAJI DOSEN</h2>' +
+      '<div class="sub">Ma\'had Aly An-Nur II | Periode: ' + escapeHtml(month) + ' ' + escapeHtml(String(year)) + '</div>' +
       '<table>' +
-        '<tr><td>Nama</td><td>' + (p.lecturer_name||'-') + '</td></tr>' +
-        '<tr><td>NIDN</td><td>' + (p.nidn||'-') + '</td></tr>' +
-        '<tr><td>Kategori</td><td>' + (p.category_code||'-') + '</td></tr>' +
+        '<tr><td>Nama</td><td>' + escapeHtml(lecName) + '</td></tr>' +
+        '<tr><td>NIDN</td><td>' + escapeHtml(lecNidn) + '</td></tr>' +
+        '<tr><td>Kategori</td><td>' + escapeHtml(lecCat) + '</td></tr>' +
         '<tr><td colspan="2" style="background:#f5f5f5;font-weight:bold;">Rincian Gaji</td></tr>' +
         '<tr><td>Jam Terjadwal</td><td>' + (p.total_scheduled_hours||0) + ' jam</td></tr>' +
         '<tr><td>Jam Hadir</td><td>' + (p.total_attended_hours||0) + ' jam</td></tr>' +

@@ -7,7 +7,7 @@ var filteredLecturers = [];
 async function loadLecturers() {
   var tbody = document.getElementById('lecturersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
   try {
     const { data, error } = await _sb.from('v_lecturers_with_category').select('*').order('name');
     if (error) throw error;
@@ -26,22 +26,26 @@ function renderLecturersTable() {
   var tbody = document.getElementById('lecturersTableBody');
   if (!tbody) return;
   if (filteredLecturers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:var(--space-8);">Tidak ada data dosen</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:var(--space-8);">Tidak ada data dosen</td></tr>';
     return;
   }
   tbody.innerHTML = filteredLecturers.map(function(l) {
-    var badge = l.is_active ? '<span class="badge badge-green">Aktif</span>' : '<span class="badge badge-gray">Tidak Aktif</span>';
+    var badge = l.is_active
+      ? '<span class="badge badge-green">Aktif</span>'
+      : '<span class="badge badge-gray">Tidak Aktif</span>';
+    // escapeHtml mencegah XSS dari data database
     return '<tr>' +
-      '<td><strong>' + (l.nidn||'-') + '</strong></td>' +
-      '<td>' + (l.name||'-') + '</td>' +
-      '<td>' + (l.email||'-') + '</td>' +
-      '<td>' + (l.phone||'-') + '</td>' +
+      '<td><strong>' + escapeHtml(l.nidn||'-') + '</strong></td>' +
+      '<td>' + escapeHtml(l.name||'-') + '</td>' +
+      '<td>' + escapeHtml(l.email||'-') + '</td>' +
+      '<td>' + escapeHtml(l.phone||'-') + '</td>' +
+      '<td><span class="badge badge-blue">' + escapeHtml(l.category_code||'-') + '</span></td>' +
       '<td>' + badge + '</td>' +
       '<td>' +
-        '<button class="btn-icon" onclick="editLecturer(\'' + l.id + '\')" title="Edit">' +
+        '<button class="btn-icon" onclick="editLecturer(\'' + escapeHtml(l.id) + '\')" title="Edit">' +
           '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="deleteLecturer(\'' + l.id + '\')" title="Hapus">' +
+        '<button class="btn-icon" onclick="deleteLecturer(\'' + escapeHtml(l.id) + '\')" title="Hapus">' +
           '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
         '</button>' +
       '</td>' +
@@ -54,12 +58,17 @@ function populateLecturerDropdowns(lecturers) {
   var schedSel = document.getElementById('scheduleLecturer');
   if (schedSel) {
     schedSel.innerHTML = '<option value="">Pilih Dosen</option>' +
-      active.map(function(l) { return '<option value="' + l.id + '">' + l.name + ' (' + l.nidn + ')</option>'; }).join('');
+      active.map(function(l) {
+        return '<option value="' + escapeHtml(l.id) + '">' +
+          escapeHtml(l.name) + ' (' + escapeHtml(l.nidn) + ')</option>';
+      }).join('');
   }
   var filterSel = document.getElementById('filterScheduleLecturer');
   if (filterSel) {
     filterSel.innerHTML = '<option value="">Semua Dosen</option>' +
-      active.map(function(l) { return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('');
+      active.map(function(l) {
+        return '<option value="' + escapeHtml(l.id) + '">' + escapeHtml(l.name) + '</option>';
+      }).join('');
   }
 }
 
@@ -78,6 +87,9 @@ function showAddLecturerModal() {
   document.getElementById('lecturerModalTitle').textContent = 'Tambah Dosen';
   document.getElementById('lecturerForm').reset();
   document.getElementById('lecturerId').value = '';
+  // Reset category dropdown ke pilihan pertama
+  var catSel = document.getElementById('lecturerCategory');
+  if (catSel) catSel.selectedIndex = 0;
   document.getElementById('lecturerModal').style.display = 'flex';
   document.getElementById('lecturerNidn').focus();
 }
@@ -91,6 +103,9 @@ async function editLecturer(id) {
   document.getElementById('lecturerName').value  = l.name  || '';
   document.getElementById('lecturerEmail').value = l.email || '';
   document.getElementById('lecturerPhone').value = l.phone || '';
+  // Set category dropdown
+  var catSel = document.getElementById('lecturerCategory');
+  if (catSel && l.category_id) catSel.value = l.category_id;
   document.getElementById('lecturerModal').style.display = 'flex';
   document.getElementById('lecturerNidn').focus();
 }
@@ -106,13 +121,22 @@ async function saveLecturer() {
   var name       = document.getElementById('lecturerName').value.trim();
   var email      = document.getElementById('lecturerEmail').value.trim();
   var phone      = document.getElementById('lecturerPhone').value.trim();
+  var categoryId = document.getElementById('lecturerCategory')?.value || '';
 
-  if (!nidn)                    { showToast('NIDN harus diisi', 'error'); return; }
-  if (!/^\d{10}$/.test(nidn))   { showToast('NIDN harus 10 digit angka', 'error'); return; }
-  if (!name)                    { showToast('Nama harus diisi', 'error'); return; }
-  if (email && !validateEmail(email)) { showToast('Format email tidak valid', 'error'); return; }
+  if (!nidn)                              { showToast('NIDN harus diisi', 'error'); return; }
+  if (!/^\d{10}$/.test(nidn))             { showToast('NIDN harus 10 digit angka', 'error'); return; }
+  if (!name)                              { showToast('Nama harus diisi', 'error'); return; }
+  if (!categoryId)                        { showToast('Kategori harus dipilih', 'error'); return; }
+  if (email && !validateEmail(email))     { showToast('Format email tidak valid', 'error'); return; }
 
-  var payload = { nidn, name, email: email||null, phone: phone||null, is_active: true };
+  var payload = {
+    nidn,
+    name,
+    category_id: categoryId,
+    email:       email  || null,
+    phone:       phone  || null,
+    is_active:   true
+  };
 
   try {
     showLoading();
@@ -138,7 +162,8 @@ async function deleteLecturer(id) {
   if (!confirm('Hapus dosen ini? Data jadwal dan payroll terkait tetap tersimpan.')) return;
   try {
     showLoading();
-    const { error } = await _sb.from('lecturers').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await _sb.from('lecturers')
+      .update({ deleted_at: new Date().toISOString() }).eq('id', id);
     if (error) throw error;
     showToast('Dosen berhasil dihapus', 'success');
     loadLecturers();

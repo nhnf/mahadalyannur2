@@ -40,8 +40,8 @@ async function loadMatkul() {
     tbody.innerHTML = matkulCache.map(function(mk) {
       var jml = schCount[mk.id] || 0;
       return '<tr>' +
-        '<td><span class="badge badge-blue" style="font-family:monospace;">' + mk.kode + '</span></td>' +
-        '<td><strong>' + mk.nama + '</strong></td>' +
+        '<td><span class="badge badge-blue" style="font-family:monospace;">' + escapeHtml(mk.kode) + '</span></td>' +
+        '<td><strong>' + escapeHtml(mk.nama) + '</strong></td>' +
         '<td style="text-align:center;">' + (mk.sks || 0) + ' SKS</td>' +
         '<td style="text-align:center;">' +
           (jml > 0
@@ -49,10 +49,10 @@ async function loadMatkul() {
             : '<span class="badge badge-gray">-</span>') +
         '</td>' +
         '<td>' +
-          '<button class="btn-icon" onclick="editMatkul(\'' + mk.id + '\')" title="Edit">' +
+          '<button class="btn-icon" onclick="editMatkul(\'' + escapeHtml(mk.id) + '\')" title="Edit">' +
             '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
           '</button>' +
-          '<button class="btn-icon" onclick="deleteMatkul(\'' + mk.id + '\')" title="Hapus">' +
+          '<button class="btn-icon" onclick="deleteMatkul(\'' + escapeHtml(mk.id) + '\')" title="Hapus">' +
             '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
           '</button>' +
         '</td>' +
@@ -74,8 +74,8 @@ function populateMatkulDropdowns(matkuls) {
   if (sel) {
     sel.innerHTML = '<option value="">-- Pilih Mata Kuliah --</option>' +
       matkuls.map(function(mk) {
-        return '<option value="' + mk.id + '" data-nama="' + mk.nama + '">' +
-          mk.kode + ' — ' + mk.nama + '</option>';
+        return '<option value="' + escapeHtml(mk.id) + '" data-nama="' + escapeHtml(mk.nama) + '">' +
+          escapeHtml(mk.kode) + ' — ' + escapeHtml(mk.nama) + '</option>';
       }).join('');
   }
 }
@@ -93,10 +93,10 @@ async function editMatkul(id) {
   var mk = matkulCache.find(function(m) { return m.id === id; });
   if (!mk) { showToast('Mata kuliah tidak ditemukan', 'error'); return; }
   document.getElementById('matkulModalTitle').textContent = 'Edit Mata Kuliah';
-  document.getElementById('matkulId').value       = mk.id;
-  document.getElementById('matkulKode').value     = mk.kode;
-  document.getElementById('matkulNama').value     = mk.nama;
-  document.getElementById('matkulSks').value      = mk.sks || 2;
+  document.getElementById('matkulId').value        = mk.id;
+  document.getElementById('matkulKode').value      = mk.kode;
+  document.getElementById('matkulNama').value      = mk.nama;
+  document.getElementById('matkulSks').value       = mk.sks || 2;
   document.getElementById('matkulDeskripsi').value = mk.deskripsi || '';
   document.getElementById('matkulModal').style.display = 'flex';
   document.getElementById('matkulNama').focus();
@@ -109,10 +109,10 @@ function closeMatkulModal() {
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 async function saveMatkul() {
-  var id       = document.getElementById('matkulId').value;
-  var kode     = document.getElementById('matkulKode').value.trim().toUpperCase();
-  var nama     = document.getElementById('matkulNama').value.trim();
-  var sks      = parseInt(document.getElementById('matkulSks').value) || 2;
+  var id        = document.getElementById('matkulId').value;
+  var kode      = document.getElementById('matkulKode').value.trim().toUpperCase();
+  var nama      = document.getElementById('matkulNama').value.trim();
+  var sks       = parseInt(document.getElementById('matkulSks').value) || 2;
   var deskripsi = document.getElementById('matkulDeskripsi').value.trim();
 
   if (!kode) { showToast('Kode harus diisi', 'error'); return; }

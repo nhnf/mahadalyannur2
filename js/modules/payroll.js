@@ -29,19 +29,21 @@ async function loadPayroll() {
     var year  = parseInt(document.getElementById('filterPayrollYear').value);
 
     const { data, error } = await _sb.from('payroll')
-      .select('*, lecturers(name, nidn)')
+      .select('*, lecturers(name, nidn, category_id, categories(category_code))')
       .eq('period_month', month)
       .eq('period_year', year)
-      .order('lecturers(name)');
+      .order('lecturer_id');
 
     if (error) throw error;
     payrollData = (data || []).map(function(p) {
       return Object.assign({}, p, {
         lecturer_name: p.lecturers?.name || '-',
         nidn:          p.lecturers?.nidn || '-',
-        category_code: '-'  // kategori sekarang per matkul, bukan per dosen
+        category_code: p.lecturers?.categories?.category_code || '-'
       });
     });
+    // Urutkan berdasarkan nama dosen
+    payrollData.sort(function(a, b) { return a.lecturer_name.localeCompare(b.lecturer_name, 'id'); });
     renderPayrollTable();
   } catch(err) {
     console.error('loadPayroll error:', err);
@@ -59,8 +61,8 @@ function renderPayrollTable() {
   }
   tbody.innerHTML = payrollData.map(function(p) {
     return '<tr>' +
-      '<td><strong>' + p.lecturer_name + '</strong><br><small class="text-secondary">' + p.nidn + '</small></td>' +
-      '<td><span class="badge badge-blue">' + p.category_code + '</span></td>' +
+      '<td><strong>' + escapeHtml(p.lecturer_name) + '</strong><br><small class="text-secondary">' + escapeHtml(p.nidn) + '</small></td>' +
+      '<td><span class="badge badge-blue">' + escapeHtml(p.category_code) + '</span></td>' +
       '<td style="text-align:center;">' + (p.total_scheduled_hours||0) + '</td>' +
       '<td style="text-align:center;">' + (p.total_attended_hours||0) + '</td>' +
       '<td>' + formatCurrency(p.fixed_component_amount) + '</td>' +
@@ -68,10 +70,10 @@ function renderPayrollTable() {
       '<td>' + formatCurrency(p.transportation_amount) + '</td>' +
       '<td><strong style="color:var(--primary-500);">' + formatCurrency(p.total_salary) + '</strong></td>' +
       '<td>' +
-        '<button class="btn-icon" onclick="viewPayrollDetail(\'' + p.id + '\')" title="Detail">' +
+        '<button class="btn-icon" onclick="viewPayrollDetail(\'' + escapeHtml(p.id) + '\')" title="Detail">' +
           '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="printSlip(\'' + p.id + '\')" title="Cetak Slip">' +
+        '<button class="btn-icon" onclick="printSlip(\'' + escapeHtml(p.id) + '\')" title="Cetak Slip">' +
           '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>' +
         '</button>' +
       '</td>' +
@@ -105,15 +107,18 @@ function printSlip(id) {
   if (!p) return;
   var month = getMonthName(p.period_month), year = p.period_year;
   var win = window.open('', '_blank', 'width=600,height=700');
+  if (!win) { showToast('Popup diblokir browser. Izinkan popup untuk mencetak.', 'warning'); return; }
+  // Gunakan textContent-safe string (tidak ada HTML injection karena data di-escape)
   win.document.write(
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Slip Gaji</title>' +
     '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;}h2{text-align:center;margin-bottom:4px;}.sub{text-align:center;color:#555;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}td{padding:8px 12px;border-bottom:1px solid #eee;}td:last-child{text-align:right;}.total td{font-weight:bold;font-size:16px;border-top:2px solid #333;border-bottom:none;}.footer{margin-top:40px;text-align:center;font-size:12px;color:#888;}</style>' +
     '</head><body>' +
-    '<h2>SLIP GAJI DOSEN</h2><div class="sub">Ma\'had Aly An-Nur II | Periode: ' + month + ' ' + year + '</div>' +
+    '<h2>SLIP GAJI DOSEN</h2>' +
+    '<div class="sub">Ma\'had Aly An-Nur II | Periode: ' + escapeHtml(month) + ' ' + escapeHtml(String(year)) + '</div>' +
     '<table>' +
-      '<tr><td>Nama</td><td>' + p.lecturer_name + '</td></tr>' +
-      '<tr><td>NIDN</td><td>' + p.nidn + '</td></tr>' +
-      '<tr><td>Kategori</td><td>' + p.category_code + '</td></tr>' +
+      '<tr><td>Nama</td><td>' + escapeHtml(p.lecturer_name) + '</td></tr>' +
+      '<tr><td>NIDN</td><td>' + escapeHtml(p.nidn) + '</td></tr>' +
+      '<tr><td>Kategori</td><td>' + escapeHtml(p.category_code) + '</td></tr>' +
       '<tr><td colspan="2" style="background:#f5f5f5;font-weight:bold;">Rincian Gaji</td></tr>' +
       '<tr><td>Jam Terjadwal</td><td>' + (p.total_scheduled_hours||0) + ' jam</td></tr>' +
       '<tr><td>Jam Hadir</td><td>' + (p.total_attended_hours||0) + ' jam</td></tr>' +
@@ -134,10 +139,18 @@ function exportToExcel() {
   var year  = document.getElementById('filterPayrollYear').value;
   var headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
   var rows = payrollData.map(function(p) {
-    return [p.nidn||'', p.lecturer_name||'', p.category_code||'',
-      p.total_scheduled_hours||0, p.total_attended_hours||0,
-      p.fixed_component_amount||0, p.attendance_component_amount||0,
-      p.transportation_amount||0, p.total_salary||0].join(',');
+    // escapeCsv mencegah data dengan koma merusak format CSV
+    return [
+      escapeCsv(p.nidn||''),
+      escapeCsv(p.lecturer_name||''),
+      escapeCsv(p.category_code||''),
+      p.total_scheduled_hours||0,
+      p.total_attended_hours||0,
+      p.fixed_component_amount||0,
+      p.attendance_component_amount||0,
+      p.transportation_amount||0,
+      p.total_salary||0
+    ].join(',');
   });
   var csv  = [headers.join(',')].concat(rows).join('\n');
   var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -158,5 +171,3 @@ function initPayrollModule() {
   var detailModal = document.getElementById('payrollDetailModal');
   if (detailModal) detailModal.addEventListener('click', function(e) { if (e.target === detailModal) closePayrollDetailModal(); });
 }
-
-
