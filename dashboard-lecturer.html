@@ -255,6 +255,32 @@
   <div class="toast-container" id="toastContainer"></div>
   <div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner spinner-lg"></div></div>
 
+  <!-- Modal: Konfirmasi Logout -->
+  <div class="modal-overlay" id="logoutModal" style="display:none;z-index:9999;">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header" style="border-bottom:none;padding-bottom:0;">
+        <div style="width:48px;height:48px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+          <svg width="24" height="24" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding-top:var(--space-3);">
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-2);">Keluar dari Aplikasi?</h3>
+        <p style="font-size:14px;color:var(--text-secondary);margin:0;">Sesi Anda akan diakhiri dan Anda perlu login kembali.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;gap:var(--space-3);">
+        <button class="btn btn-secondary" id="cancelLogoutBtn" style="min-width:100px;">Batal</button>
+        <button class="btn" id="confirmLogoutBtn" style="min-width:100px;background:#DC2626;color:white;border-color:#DC2626;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Keluar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- App Config (credentials — tidak di-commit ke git) -->
   <script src="config.js"></script>
@@ -292,8 +318,20 @@
     document.getElementById('sidebarOverlay').classList.remove('active');
   });
   document.getElementById('logoutBtn').addEventListener('click', function() {
-    auth.signOut();
+    document.getElementById('logoutModal').style.display = 'flex';
+  });
+  document.getElementById('cancelLogoutBtn').addEventListener('click', function() {
+    document.getElementById('logoutModal').style.display = 'none';
+  });
+  document.getElementById('confirmLogoutBtn').addEventListener('click', async function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner spinner-sm" style="border-color:rgba(255,255,255,.3);border-top-color:white;width:14px;height:14px;"></div> Keluar...';
+    await auth.signOut();
     window.location.href = 'index.html';
+  });
+  document.getElementById('logoutModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
   });
 
   // ── LOAD PROFIL DOSEN ────────────────────────────────────────
