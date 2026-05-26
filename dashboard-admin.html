@@ -737,8 +737,6 @@
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- App Config (credentials — tidak di-commit ke git) -->
-  <script src="config.js"></script>
   <!-- App Client -->
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
@@ -886,22 +884,21 @@
   })();
 
   // ── INIT ─────────────────────────────────────────────────────
-  (function initApp() {
-    // ── ROUTE GUARD ──────────────────────────────────────────
-    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
-    if (!session || !session.user) {
+  (async function initApp() {
+    // ── ROUTE GUARD via Supabase Auth ────────────────────────
+    var res = await auth.getSession();
+    if (!res.data || !res.data.session) {
       window.location.href = 'index.html';
       return;
     }
-    // Pastikan role sesuai
-    var role = session.user.role || '';
+    var role = res.data.session.user.role || '';
     if (role !== 'admin' && role !== 'hr') {
       window.location.href = 'index.html';
       return;
     }
 
     // Tampilkan email dari session
-    document.getElementById('userEmail').textContent = session.user.email || 'admin@example.com';
+    document.getElementById('userEmail').textContent = res.data.session.user.email || '';
 
     // Init semua modul (pasang event listeners)
     if (typeof initCategoriesModule  === 'function') initCategoriesModule();

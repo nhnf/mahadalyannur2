@@ -274,8 +274,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- App Config (credentials — tidak di-commit ke git) -->
-  <script src="config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
 
@@ -520,20 +518,20 @@
   }
 
   // â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  (function init() {
-    // â”€â”€ ROUTE GUARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
-    if (!session || !session.user) {
+  (async function init() {
+    // Route Guard via Supabase Auth
+    var res = await auth.getSession();
+    if (!res.data || !res.data.session) {
       window.location.href = 'index.html';
       return;
     }
-    var role = session.user.role || '';
+    var role = res.data.session.user.role || '';
     if (role !== 'finance' && role !== 'admin' && role !== 'hr') {
       window.location.href = 'index.html';
       return;
     }
 
-    var email = session.user.email || 'keuangan@example.com';
+    var email = res.data.session.user.email || '';
     document.getElementById('userEmail').textContent = email;
     document.getElementById('userEmailSidebar').textContent = email;
 
@@ -553,7 +551,3 @@
   </script>
 </body>
 </html>
-
-
-
-

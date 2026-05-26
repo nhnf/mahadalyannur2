@@ -288,8 +288,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- App Config (credentials — tidak di-commit ke git) -->
-  <script src="config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
 
@@ -522,15 +520,15 @@
   }
 
   // ── INIT ─────────────────────────────────────────────────────
-  (function init() {
-    // ── ROUTE GUARD ──────────────────────────────────────────
-    var session = JSON.parse(localStorage.getItem('gd_session') || 'null');
-    if (!session || !session.user) {
+  (async function init() {
+    // Route Guard via Supabase Auth
+    var res = await auth.getSession();
+    if (!res.data || !res.data.session) {
       window.location.href = 'index.html';
       return;
     }
 
-    var email = session.user.email || '';
+    var email = res.data.session.user.email || '';
     document.getElementById('userEmail').textContent = email;
 
     var y = new Date().getFullYear();
@@ -549,5 +547,3 @@
   </script>
 </body>
 </html>
-
-
