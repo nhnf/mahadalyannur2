@@ -60,6 +60,12 @@
             <div class="flex items-center gap-3">
               <span class="body-sm text-secondary" id="userEmail"></span>
               <div class="avatar avatar-md" style="background:var(--success);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;" id="userInitial">D</div>
+              <button onclick="document.getElementById('logoutModal').style.display='flex'"
+                title="Logout"
+                style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-md);border:1px solid var(--card-border);background:var(--surface-2);color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                <span class="hide-mobile">Logout</span>
+              </button>
             </div>
           </div>
         </div>
