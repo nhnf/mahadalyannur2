@@ -2,22 +2,15 @@
  * Supabase Client
  * Koneksi ke Supabase project.
  *
- * KONFIGURASI: Salin .env.example ke config.js dan isi nilai yang sesuai.
- * Jangan pernah commit nilai asli ke git.
+ * Konfigurasi dibaca dari window.__APP_CONFIG__ (config.js) jika ada,
+ * atau fallback ke nilai default project ini.
  */
 
-// Ambil konfigurasi dari window.__APP_CONFIG__ yang di-inject oleh config.js
+// Ambil konfigurasi dari config.js jika ada, fallback ke nilai project
 var _cfg = (typeof window !== 'undefined' && window.__APP_CONFIG__) || {};
 
-var SUPABASE_URL  = _cfg.SUPABASE_URL  || '';
-var SUPABASE_ANON = _cfg.SUPABASE_ANON || '';
-
-if (!SUPABASE_URL || !SUPABASE_ANON) {
-  console.error(
-    '[GajiDosen] Konfigurasi Supabase tidak ditemukan.\n' +
-    'Salin config.example.js ke config.js dan isi SUPABASE_URL & SUPABASE_ANON.'
-  );
-}
+var SUPABASE_URL  = _cfg.SUPABASE_URL  || 'https://unyfvjugdyrdirkdrifw.supabase.co';
+var SUPABASE_ANON = _cfg.SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVueWZ2anVnZHlyZGlya2RyaWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTM2MjMsImV4cCI6MjA5NTI4OTYyM30.J9694tJehud3vlWZccqcZVyb_xsHSjO9lyvN3twPPmw';
 
 // Inisialisasi Supabase client (dari CDN)
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
