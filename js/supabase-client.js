@@ -44,14 +44,13 @@ var auth = {
         .from('users')
         .select('id, email, role, password_hash, is_active')
         .eq('email', creds.email.trim().toLowerCase())
-        .is('deleted_at', null)
         .limit(1);
 
       if (error) throw error;
       if (!users || users.length === 0) throw new Error('Email tidak ditemukan');
 
       const user = users[0];
-      if (!user.is_active) throw new Error('Akun tidak aktif. Hubungi administrator.');
+      if (user.is_active === false) throw new Error('Akun tidak aktif. Hubungi administrator.');
       if (user.password_hash !== hashHex) throw new Error('Password salah');
 
       _session = {
