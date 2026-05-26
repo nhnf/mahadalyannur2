@@ -7,7 +7,7 @@ var filteredLecturers = [];
 async function loadLecturers() {
   var tbody = document.getElementById('lecturersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
   try {
     const { data, error } = await _sb.from('v_lecturers_with_category').select('*').order('name');
     if (error) throw error;
@@ -26,7 +26,7 @@ function renderLecturersTable() {
   var tbody = document.getElementById('lecturersTableBody');
   if (!tbody) return;
   if (filteredLecturers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:var(--space-8);">Tidak ada data dosen</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:var(--space-8);">Tidak ada data dosen</td></tr>';
     return;
   }
   tbody.innerHTML = filteredLecturers.map(function(l) {
@@ -86,12 +86,11 @@ async function editLecturer(id) {
   var l = lecturersData.find(function(x) { return x.id === id; });
   if (!l) { showToast('Dosen tidak ditemukan', 'error'); return; }
   document.getElementById('lecturerModalTitle').textContent = 'Edit Dosen';
-  document.getElementById('lecturerId').value       = l.id;
-  document.getElementById('lecturerNidn').value     = l.nidn || '';
-  document.getElementById('lecturerName').value     = l.name || '';
-  document.getElementById('lecturerCategory').value = l.category_id || '';
-  document.getElementById('lecturerEmail').value    = l.email || '';
-  document.getElementById('lecturerPhone').value    = l.phone || '';
+  document.getElementById('lecturerId').value    = l.id;
+  document.getElementById('lecturerNidn').value  = l.nidn  || '';
+  document.getElementById('lecturerName').value  = l.name  || '';
+  document.getElementById('lecturerEmail').value = l.email || '';
+  document.getElementById('lecturerPhone').value = l.phone || '';
   document.getElementById('lecturerModal').style.display = 'flex';
   document.getElementById('lecturerNidn').focus();
 }

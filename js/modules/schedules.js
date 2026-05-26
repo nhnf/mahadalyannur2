@@ -6,11 +6,8 @@
 var schedulesData = [];
 var HARI_ORDER   = ['Sabtu','Ahad','Senin','Selasa','Rabu','Kamis'];
 var SESI_LABEL   = {1:'Pagi 1', 2:'Pagi 2', 3:'Sore', 4:'Malam'};
-// Semester 2A dan 2B digabung jadi satu kolom "2" di tampilan
-// tapi data di DB tetap '2A' dan '2B'
-var SEMESTERS    = ['2','4','6','8'];
-var SEM_DISPLAY  = {'2':'2 (2A & 2B)', '4':'4', '6':'6', '8':'8'};
-var SEM_MATCH    = {'2':['2A','2B'],    '4':['4'],'6':['6'],'8':['8']};
+var SEMESTERS    = ['2A','2B','4','6','8'];
+var SEM_DISPLAY  = {'2A':'2A', '2B':'2B', '4':'4', '6':'6', '8':'8'};
 
 // ── LOAD ─────────────────────────────────────────────────────────────────────
 async function loadSchedules() {
@@ -45,7 +42,7 @@ function renderScheduleGrid() {
     return;
   }
 
-  // Build lookup: grid[hari][sesi][semester_bucket] = [entries]
+  // Build grid[hari][sesi][bucket] = [entries]
   var grid = {};
   HARI_ORDER.forEach(function(h) {
     grid[h] = {};
@@ -56,16 +53,13 @@ function renderScheduleGrid() {
   });
 
   schedulesData.forEach(function(s) {
-    var h  = s.day_of_week;
-    var sl = s.session_slot;
-    var rawSem = s.semester;
-    // 2A dan 2B masuk ke bucket '2'
-    var bucket = (rawSem === '2A' || rawSem === '2B') ? '2' : rawSem;
+    var h      = s.day_of_week;
+    var sl     = s.session_slot;
+    var bucket = s.semester; // langsung pakai semester asli
     if (!grid[h] || !grid[h][sl] || grid[h][sl][bucket] === undefined) return;
     grid[h][sl][bucket].push(s);
   });
 
-  // Tentukan hari & sesi yang punya data
   var hariAda = HARI_ORDER.filter(function(h) {
     return [1,2,3,4].some(function(sl) {
       return SEMESTERS.some(function(sm) { return grid[h][sl][sm].length > 0; });
@@ -77,10 +71,7 @@ function renderScheduleGrid() {
     return;
   }
 
-  // ── Bangun HTML tabel ──────────────────────────────────────────────────────
   var html = '<div class="table-container"><table class="table schedule-grid-table">';
-
-  // Header: HARI | WAKTU | 2A | 2B | 4 | 6 | 8
   html += '<thead><tr>';
   html += '<th style="text-align:center;width:70px;">HARI</th>';
   html += '<th style="text-align:center;width:65px;">WAKTU</th>';
@@ -98,7 +89,6 @@ function renderScheduleGrid() {
     sesiAda.forEach(function(sl, idx) {
       html += '<tr>';
 
-      // Kolom HARI (rowspan)
       if (idx === 0) {
         html += '<td rowspan="' + sesiAda.length + '" ' +
           'style="text-align:center;font-weight:700;vertical-align:middle;' +
@@ -107,13 +97,11 @@ function renderScheduleGrid() {
           hari + '</td>';
       }
 
-      // Kolom WAKTU
       html += '<td style="text-align:center;white-space:nowrap;font-size:12px;' +
         'font-weight:600;color:var(--text-secondary);background:var(--surface-2);' +
         'border-right:1px solid var(--card-border);vertical-align:middle;">' +
         SESI_LABEL[sl] + '</td>';
 
-      // Kolom per Semester
       SEMESTERS.forEach(function(sm) {
         var entries = grid[hari][sl][sm];
         html += '<td style="vertical-align:top;padding:6px;">';
@@ -121,12 +109,36 @@ function renderScheduleGrid() {
           html += '<span style="color:var(--text-tertiary);font-size:12px;">-</span>';
         } else {
           entries.forEach(function(s) {
+            var hasDosen    = s.lecturer_id !== null && s.lecturer_name !== '—';
             var statusColor = s.status === 'hadir' ? 'var(--success)' :
                               s.status === 'absen' ? 'var(--danger)'  : 'var(--warning)';
-            html += '<div class="schedule-dosen-card" style="border-left:3px solid ' + statusColor + ';margin-bottom:4px;">' +
-              '<div class="schedule-dosen-name">' + (s.lecturer_name||'-') + '</div>' +
-              '<div class="schedule-dosen-matkul">' + (s.mata_kuliah||'-') + '</div>' +
-              '</div>';
+            var bgStyle     = hasDosen ? '' : 'background:var(--surface-2);';
+
+            html += '<div class="schedule-dosen-card" style="border-left:3px solid ' + statusColor + ';margin-bottom:4px;' + bgStyle + '">' +
+              '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">' +
+                '<div style="flex:1;min-width:0;">';
+
+            if (hasDosen) {
+              html += '<div class="schedule-dosen-name">' + s.lecturer_name + '</div>';
+            } else {
+              html += '<div class="schedule-dosen-name" style="color:var(--text-tertiary);font-style:italic;font-size:11px;">Tanpa Dosen</div>';
+            }
+
+            html +=   '<div class="schedule-dosen-matkul">' + (s.mata_kuliah||'-') + '</div>' +
+                      '<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">Sem ' + (s.semester||'-') + '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">' +
+                      '<button class="btn-icon" style="width:22px;height:22px;background:var(--info-bg);" ' +
+                        'onclick="editSchedule(\'' + s.id + '\')" title="Edit">' +
+                        '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
+                      '</button>' +
+                      '<button class="btn-icon" style="width:22px;height:22px;background:var(--danger-bg);" ' +
+                        'onclick="deleteSchedule(\'' + s.id + '\')" title="Hapus">' +
+                        '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
+                      '</button>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>';
           });
         }
         html += '</td>';
@@ -135,13 +147,11 @@ function renderScheduleGrid() {
       html += '</tr>';
     });
 
-    // Garis pemisah antar hari (HARI + WAKTU + 4 semester = 6 kolom)
-    html += '<tr><td colspan="6" style="padding:0;background:var(--primary-100);height:3px;"></td></tr>';
+    html += '<tr><td colspan="7" style="padding:0;background:var(--primary-100);height:3px;"></td></tr>';
   });
 
   html += '</tbody></table></div>';
 
-  // Legenda
   html += '<div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);font-size:12px;color:var(--text-secondary);">' +
     '<span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--warning);border-radius:2px;display:inline-block;"></span> Pending</span>' +
     '<span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--success);border-radius:2px;display:inline-block;"></span> Hadir</span>' +
@@ -151,44 +161,116 @@ function renderScheduleGrid() {
   container.innerHTML = html;
 }
 
-// ── MODAL ─────────────────────────────────────────────────────────────────────
+// ── MODAL TAMBAH ──────────────────────────────────────────────────────────────
 function showAddScheduleModal() {
+  document.getElementById('scheduleModalTitle').textContent = 'Tambah Jadwal';
   document.getElementById('scheduleForm').reset();
+  document.getElementById('scheduleId').value = '';
+  // Reset checkboxes
+  document.querySelectorAll('input[name="sessionSlot"]').forEach(function(cb) { cb.disabled = false; });
+  // Tampilkan field sesi (disembunyikan saat edit)
+  var sesiGroup = document.getElementById('sesiGroup');
+  if (sesiGroup) sesiGroup.style.display = 'block';
+  document.getElementById('scheduleModal').style.display = 'flex';
+}
+
+// ── EDIT ──────────────────────────────────────────────────────────────────────
+async function editSchedule(id) {
+  var s = schedulesData.find(function(x) { return x.id === id; });
+  if (!s) { showToast('Jadwal tidak ditemukan', 'error'); return; }
+
+  document.getElementById('scheduleModalTitle').textContent = 'Edit Jadwal';
+  document.getElementById('scheduleId').value = s.id;
+
+  // Isi form
+  document.getElementById('scheduleLecturer').value = s.lecturer_id || '';
+  document.getElementById('scheduleDay').value      = s.day_of_week || '';
+  document.getElementById('scheduleSemester').value = s.semester    || '';
+  document.getElementById('scheduleMatkul').value   = s.mata_kuliah || '';
+  document.getElementById('scheduleNotes').value    = s.notes       || '';
+
+  // Isi dropdown matkul jika ada mata_kuliah_id
+  var matkulSel = document.getElementById('scheduleMatkulId');
+  if (matkulSel && s.mata_kuliah_id) {
+    matkulSel.value = s.mata_kuliah_id;
+  }
+
+  // Saat edit, sesi tidak bisa diubah (sudah fixed) — sembunyikan
+  var sesiGroup = document.getElementById('sesiGroup');
+  if (sesiGroup) sesiGroup.style.display = 'none';
+
   document.getElementById('scheduleModal').style.display = 'flex';
 }
 
 function closeScheduleModal() {
   document.getElementById('scheduleModal').style.display = 'none';
   document.getElementById('scheduleForm').reset();
+  document.getElementById('scheduleId').value = '';
+  var sesiGroup = document.getElementById('sesiGroup');
+  if (sesiGroup) sesiGroup.style.display = 'block';
 }
 
+// ── SAVE (tambah & edit) ──────────────────────────────────────────────────────
 async function saveSchedule() {
+  var id         = document.getElementById('scheduleId').value;
   var lecturerId = document.getElementById('scheduleLecturer').value;
   var dayOfWeek  = document.getElementById('scheduleDay').value;
   var semester   = document.getElementById('scheduleSemester').value;
   var matkul     = document.getElementById('scheduleMatkul').value.trim();
+  var matkulId   = document.getElementById('scheduleMatkulId')?.value || null;
   var notes      = document.getElementById('scheduleNotes').value.trim();
-  var checked    = document.querySelectorAll('input[name="sessionSlot"]:checked');
-  var slots      = Array.prototype.map.call(checked, function(cb) { return parseInt(cb.value); });
 
-  if (!lecturerId) { showToast('Pilih dosen terlebih dahulu', 'error'); return; }
   if (!dayOfWeek)  { showToast('Pilih hari terlebih dahulu', 'error'); return; }
   if (!semester)   { showToast('Pilih semester terlebih dahulu', 'error'); return; }
-  if (slots.length === 0) { showToast('Pilih minimal satu sesi jam', 'error'); return; }
 
   try {
     showLoading();
-    var rows = slots.map(function(slot) {
-      return { lecturer_id: lecturerId, day_of_week: dayOfWeek, session_slot: slot,
-               semester: semester, mata_kuliah: matkul||null, status: 'pending', notes: notes||null };
-    });
-    const { error } = await _sb.from('schedules').insert(rows);
-    if (error) {
-      if (error.code === '23505') showToast('Jadwal sudah ada untuk kombinasi tersebut', 'warning');
-      else throw error;
+
+    if (id) {
+      // ── MODE EDIT ──
+      var updatePayload = {
+        lecturer_id:    lecturerId || null,
+        day_of_week:    dayOfWeek,
+        semester:       semester,
+        mata_kuliah:    matkul || null,
+        mata_kuliah_id: matkulId || null,
+        notes:          notes || null
+      };
+      const { error } = await _sb.from('schedules').update(updatePayload).eq('id', id);
+      if (error) {
+        if (error.code === '23505') showToast('Jadwal sudah ada untuk kombinasi tersebut', 'warning');
+        else throw error;
+      } else {
+        showToast('Jadwal berhasil diperbarui', 'success');
+      }
+
     } else {
-      showToast(slots.length + ' jadwal berhasil ditambahkan', 'success');
+      // ── MODE TAMBAH ──
+      var checked = document.querySelectorAll('input[name="sessionSlot"]:checked');
+      var slots   = Array.prototype.map.call(checked, function(cb) { return parseInt(cb.value); });
+      if (slots.length === 0) { showToast('Pilih minimal satu sesi jam', 'error'); hideLoading(); return; }
+
+      var rows = slots.map(function(slot) {
+        return {
+          lecturer_id:    lecturerId || null,
+          day_of_week:    dayOfWeek,
+          session_slot:   slot,
+          semester:       semester,
+          mata_kuliah:    matkul || null,
+          mata_kuliah_id: matkulId || null,
+          status:         'pending',
+          notes:          notes || null
+        };
+      });
+      const { error } = await _sb.from('schedules').insert(rows);
+      if (error) {
+        if (error.code === '23505') showToast('Jadwal sudah ada untuk kombinasi tersebut', 'warning');
+        else throw error;
+      } else {
+        showToast(slots.length + ' jadwal berhasil ditambahkan', 'success');
+      }
     }
+
     closeScheduleModal();
     loadSchedules();
   } catch(err) {
@@ -197,6 +279,7 @@ async function saveSchedule() {
   } finally { hideLoading(); }
 }
 
+// ── DELETE ────────────────────────────────────────────────────────────────────
 async function deleteSchedule(id) {
   if (!confirm('Hapus jadwal ini?')) return;
   try {

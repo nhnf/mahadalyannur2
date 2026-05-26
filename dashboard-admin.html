@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Admin - Sistem Akumulasi Gaji Dosen</title>
+  <title>Dashboard Admin - Sistem Administrasi Ma'had Aly An-Nur II</title>
   <link rel="stylesheet" href="styles/design-system.css">
   <link rel="stylesheet" href="styles/layout.css">
   <link rel="stylesheet" href="styles/components.css">
@@ -16,7 +16,7 @@
       <div class="sidebar-header">
         <a href="dashboard-admin.html" class="sidebar-logo">
           <div class="sidebar-logo-icon">G</div>
-          <span class="sidebar-logo-text">Gaji Dosen</span>
+          <span class="sidebar-logo-text">Ma'had Aly</span>
         </a>
       </div>
       <nav class="sidebar-nav">
@@ -300,6 +300,10 @@
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                   <span>Hadir Semua</span>
                 </button>
+                <button class="btn btn-secondary btn-sm" id="resetAttendanceBtn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                  <span>Reset</span>
+                </button>
                 <button class="btn btn-primary btn-sm" id="saveAttendanceBtn">
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                   <span>Simpan Presensi</span>
@@ -364,7 +368,7 @@
 
         <!-- PAYROLL PAGE -->
         <div id="page-payroll" class="page-content" style="display:none;">
-          <h1 class="display-lg mb-6">Payroll Gaji Dosen</h1>
+          <h1 class="display-lg mb-6">Payroll Ma'had Aly</h1>
           <div class="filter-panel">
             <div class="filter-panel-header"><h3 class="filter-panel-title">Periode Payroll</h3></div>
             <div class="filter-panel-body">
@@ -403,7 +407,7 @@
                 <thead>
                   <tr>
                     <th>Nama Dosen</th><th>Kategori</th><th>Jam Jadwal</th><th>Jam Hadir</th>
-                    <th>Gaji Tetap</th><th>Gaji Kehadiran</th><th>Transport</th><th>Total Gaji</th><th>Aksi</th>
+                    <th class="payroll-hide-mobile">Gaji Tetap</th><th class="payroll-hide-mobile">Gaji Kehadiran</th><th class="payroll-table-transport">Transport</th><th>Total Gaji</th><th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="payrollTableBody">
@@ -568,16 +572,19 @@
   <div class="modal-overlay" id="scheduleModal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Tambah Jadwal</h2>
+        <h2 class="modal-title" id="scheduleModalTitle">Tambah Jadwal</h2>
         <button class="modal-close" id="closeScheduleModal">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
       <div class="modal-body">
         <form id="scheduleForm">
+          <input type="hidden" id="scheduleId">
           <div class="form-group">
-            <label class="form-label">Dosen</label>
-            <select id="scheduleLecturer" class="select" required></select>
+            <label class="form-label">Dosen <small style="color:var(--text-tertiary);font-weight:400;">(opsional — kosongkan jika tidak ada dosen)</small></label>
+            <select id="scheduleLecturer" class="select">
+              <option value="">— Tanpa Dosen —</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Hari</label>
@@ -611,7 +618,8 @@
             <input type="text" id="scheduleMatkul" class="input" placeholder="Atau ketik nama mata kuliah">
             <small style="font-size:11px;color:var(--text-tertiary);">Pilih dari dropdown atau ketik manual</small>
           </div>
-          <div class="form-group">
+          <!-- Sesi Jam: hanya tampil saat tambah, disembunyikan saat edit -->
+          <div class="form-group" id="sesiGroup">
             <label class="form-label">Sesi Jam</label>
             <div class="flex gap-2" style="flex-wrap:wrap;">
               <label class="flex items-center gap-2"><input type="checkbox" class="checkbox" name="sessionSlot" value="1"><span>Pagi 1</span></label>
@@ -869,3 +877,5 @@
   </script>
 </body>
 </html>
+
+

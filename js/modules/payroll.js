@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Payroll Module — Supabase
  */
 var payrollData = [];
@@ -109,7 +109,7 @@ function printSlip(id) {
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Slip Gaji</title>' +
     '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111;}h2{text-align:center;margin-bottom:4px;}.sub{text-align:center;color:#555;margin-bottom:20px;}table{width:100%;border-collapse:collapse;}td{padding:8px 12px;border-bottom:1px solid #eee;}td:last-child{text-align:right;}.total td{font-weight:bold;font-size:16px;border-top:2px solid #333;border-bottom:none;}.footer{margin-top:40px;text-align:center;font-size:12px;color:#888;}</style>' +
     '</head><body>' +
-    '<h2>SLIP GAJI DOSEN</h2><div class="sub">Periode: ' + month + ' ' + year + '</div>' +
+    '<h2>SLIP GAJI DOSEN</h2><div class="sub">Ma\'had Aly An-Nur II | Periode: ' + month + ' ' + year + '</div>' +
     '<table>' +
       '<tr><td>Nama</td><td>' + p.lecturer_name + '</td></tr>' +
       '<tr><td>NIDN</td><td>' + p.nidn + '</td></tr>' +
@@ -158,3 +158,5 @@ function initPayrollModule() {
   var detailModal = document.getElementById('payrollDetailModal');
   if (detailModal) detailModal.addEventListener('click', function(e) { if (e.target === detailModal) closePayrollDetailModal(); });
 }
+
+

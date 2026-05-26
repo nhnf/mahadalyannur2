@@ -298,7 +298,7 @@
 
   /* Schedule grid: horizontal scroll */
   #scheduleTableContainer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #scheduleTableContainer .table-container { min-width: 600px; }
+  #scheduleTableContainer .table-container { min-width: 750px; }
 
   /* Attendance table */
   #attendanceTableBody td { padding: var(--space-2) var(--space-3); }

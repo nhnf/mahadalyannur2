@@ -29,9 +29,11 @@ async function loadAttendance() {
     }
 
     // Deduplikasi: key = lecturer_id|matkul_id|hari|sesi
+    // Skip jadwal tanpa dosen (tidak perlu presensi)
     var seen = {};
     var unique = [];
     schedules.forEach(function(s) {
+      if (!s.lecturer_id) return; // skip tanpa dosen
       var key = [s.lecturer_id, s.mata_kuliah_id||'', s.day_of_week, s.session_slot].join('|');
       if (!seen[key]) {
         seen[key] = true;
@@ -222,6 +224,33 @@ function markAllPresent() {
   });
   showToast('Semua jadwal ditandai Hadir penuh', 'success');
 }
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+async function resetAttendance() {
+  var rows = document.querySelectorAll('#attendanceTableBody tr[data-att-id]');
+  if (rows.length === 0) { showToast('Tidak ada data untuk direset', 'warning'); return; }
+  if (!confirm('Reset semua hadir menjadi 0 untuk periode ini?')) return;
+  try {
+    showLoading();
+    var promises = [];
+    rows.forEach(function(row) {
+      promises.push(
+        _sb.from('attendance_monthly')
+          .update({ total_hadir: 0, updated_at: new Date().toISOString() })
+          .eq('id', row.dataset.attId)
+      );
+      var hadirInp = row.querySelector('[data-field="hadir"]');
+      if (hadirInp) { hadirInp.value = 0; updatePctDisplay(hadirInp); }
+    });
+    var results = await Promise.all(promises);
+    var errs = results.filter(function(r) { return r.error; });
+    if (errs.length > 0) throw errs[0].error;
+    showToast('Presensi berhasil direset ke 0', 'success');
+  } catch(err) {
+    showToast(err.message || 'Gagal mereset presensi', 'error');
+  } finally { hideLoading(); }
+}
+
 async function saveAttendance() {
   var rows = document.querySelectorAll('#attendanceTableBody tr[data-att-id]');
   if (rows.length === 0) { showToast('Tidak ada data untuk disimpan', 'warning'); return; }
@@ -311,6 +340,8 @@ function initAttendanceModule() {
   if (applyBtn) applyBtn.addEventListener('click', loadAttendance);
   var markAllBtn = document.getElementById('markAllPresentBtn');
   if (markAllBtn) markAllBtn.addEventListener('click', markAllPresent);
+  var resetBtn = document.getElementById('resetAttendanceBtn');
+  if (resetBtn) resetBtn.addEventListener('click', resetAttendance);
   var saveBtn = document.getElementById('saveAttendanceBtn');
   if (saveBtn) saveBtn.addEventListener('click', saveAttendance);
 

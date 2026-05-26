@@ -483,11 +483,49 @@
   margin-top: 2px;
 }
 
-/* Schedule grid — semester header colors (4 kolom: 2, 4, 6, 8) */
-.schedule-grid-table thead th:nth-child(3) { background: #1d4ed8; }
-.schedule-grid-table thead th:nth-child(4) { background: #1e3a8a; }
-.schedule-grid-table thead th:nth-child(5) { background: #172554; }
-.schedule-grid-table thead th:nth-child(6) { background: #0f172a; }
+/* Schedule grid — sticky header */
+/* Sticky thead bekerja di dalam container yang overflow */
+.schedule-grid-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* Shadow bawah agar terlihat saat scroll */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Container jadwal: overflow-y untuk scroll vertikal */
+#scheduleTableContainer .table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Kolom sama lebar */
+.schedule-grid-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Kolom HARI dan WAKTU fixed width, sisanya equal */
+.schedule-grid-table th:nth-child(1),
+.schedule-grid-table td:nth-child(1) { width: 70px; }
+.schedule-grid-table th:nth-child(2),
+.schedule-grid-table td:nth-child(2) { width: 65px; }
+
+/* Kolom semester: auto-distribute sisa lebar secara equal */
+.schedule-grid-table th:nth-child(n+3),
+.schedule-grid-table td:nth-child(n+3) { width: auto; }
+
+/* Card dosen: full width dalam sel */
+.schedule-dosen-card { width: 100%; box-sizing: border-box; min-width: unset; }
+
+/* Semester header colors (5 kolom: 2A, 2B, 4, 6, 8) */
+.schedule-grid-table thead th:nth-child(3) { background: #2563eb; }
+.schedule-grid-table thead th:nth-child(4) { background: #1d4ed8; }
+.schedule-grid-table thead th:nth-child(5) { background: #1e3a8a; }
+.schedule-grid-table thead th:nth-child(6) { background: #172554; }
+.schedule-grid-table thead th:nth-child(7) { background: #0f172a; }
 
 /* Responsive scroll untuk tabel jadwal */
 #scheduleTableContainer {
@@ -551,17 +589,31 @@
   #matkulTarifContainer .table-container { overflow-x: auto; }
   #matkulTarifContainer table { min-width: 500px; }
 
-  /* Page title area */
+  /* Page title area — wrap tombol ke bawah */
   .flex.items-center.justify-between.mb-6,
   .flex.items-center.justify-between.mb-4 {
     flex-wrap: wrap;
     gap: var(--space-3);
   }
 
-  /* Tab switcher */
+  /* Tab switcher — wrap */
   [style*="display:flex;gap:4px;background:var(--surface-2)"] {
     flex-wrap: wrap;
   }
+
+  /* Modal footer — stack buttons */
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer .btn { width: 100%; justify-content: center; }
+
+  /* Payroll table — hide less important columns */
+  .payroll-hide-mobile { display: none !important; }
+
+  /* Presensi quick summary — wrap */
+  #attendanceQuickSummary { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* Login card */
+  .login-card { padding: var(--space-5); }
+  .login-title { font-size: 20px; }
 }
 
 /* Tablet adjustments */
@@ -570,10 +622,26 @@
   .filter-panel-body { grid-template-columns: repeat(2, 1fr); }
   .schedule-grid-table { font-size: 12px; }
   .schedule-dosen-card { min-width: 130px; }
+
+  /* Modal: centered, not bottom sheet */
+  .modal {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    border-radius: var(--radius-xl);
+    animation: fadeInUp var(--duration-normal) var(--ease-enter);
+  }
+  .modal-overlay { align-items: center; }
 }
 
 /* Ensure tables always scroll horizontally */
 .table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Payroll table: hide transport on small screens */
+@media (max-width: 900px) {
+  .payroll-table-transport { display: none; }
 }
