@@ -28,18 +28,27 @@ async function loadPayroll() {
     var month = parseInt(document.getElementById('filterPayrollMonth').value);
     var year  = parseInt(document.getElementById('filterPayrollYear').value);
 
+    // Join ke lecturers langsung (tanpa nested categories) lalu ambil category_code
+    // dari v_lecturers_with_category secara terpisah untuk menghindari PGRST200
     const { data, error } = await _sb.from('payroll')
-      .select('*, lecturers(name, nidn, category_id, categories(category_code))')
+      .select('*, lecturers(name, nidn, category_id)')
       .eq('period_month', month)
       .eq('period_year', year)
       .order('lecturer_id');
 
     if (error) throw error;
+
+    // Ambil semua kategori sekaligus untuk mapping category_id → category_code
+    const { data: cats } = await _sb.from('categories').select('id, category_code');
+    var catMap = {};
+    (cats || []).forEach(function(c) { catMap[c.id] = c.category_code; });
+
     payrollData = (data || []).map(function(p) {
+      var catId = p.lecturers?.category_id;
       return Object.assign({}, p, {
         lecturer_name: p.lecturers?.name || '-',
         nidn:          p.lecturers?.nidn || '-',
-        category_code: p.lecturers?.categories?.category_code || '-'
+        category_code: catId ? (catMap[catId] || '-') : '-'
       });
     });
     // Urutkan berdasarkan nama dosen

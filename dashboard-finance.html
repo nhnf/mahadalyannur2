@@ -330,14 +330,20 @@
     try {
       var now = new Date();
       var month = now.getMonth() + 1, year = now.getFullYear();
-      const { data, error } = await _sb.from('payroll')
-        .select('*, lecturers(name, nidn)')
-        .eq('period_month', month).eq('period_year', year);
-      if (error) throw error;
+      const [payRes, catRes] = await Promise.all([
+        _sb.from('payroll').select('*, lecturers(name, nidn, category_id)')
+          .eq('period_month', month).eq('period_year', year),
+        _sb.from('categories').select('id, category_code')
+      ]);
+      if (payRes.error) throw payRes.error;
+
+      var catMap = {};
+      (catRes.data || []).forEach(function(c) { catMap[c.id] = c.category_code; });
 
       var totalGaji = 0, totalHadir = 0, totalTransport = 0, byCategory = {};
-      (data || []).forEach(function(p) {
-        var catCode = '-';
+      (payRes.data || []).forEach(function(p) {
+        var catId   = p.lecturers?.category_id;
+        var catCode = catId ? (catMap[catId] || '-') : '-';
         totalGaji      += parseFloat(p.total_salary) || 0;
         totalHadir     += parseInt(p.total_attended_hours) || 0;
         totalTransport += parseFloat(p.transportation_amount) || 0;
@@ -348,7 +354,7 @@
       });
 
       document.getElementById('statTotalGaji').textContent   = formatCurrency(totalGaji);
-      document.getElementById('statJumlahDosen').textContent = (data||[]).length;
+      document.getElementById('statJumlahDosen').textContent = (payRes.data||[]).length;
       document.getElementById('statJamHadir').textContent    = totalHadir + ' jam';
       document.getElementById('statTransport').textContent   = formatCurrency(totalTransport);
 
@@ -372,17 +378,25 @@
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--space-8);"><div class="spinner"></div></td></tr>';
     try {
       const { data, error } = await _sb.from('payroll')
-        .select('*, lecturers(name, nidn)')
-        .eq('period_month', month).eq('period_year', year)
-        .order('lecturers(name)');
+        .select('*, lecturers(name, nidn, category_id)')
+        .eq('period_month', month).eq('period_year', year);
       if (error) throw error;
+
+      // Ambil kategori untuk mapping category_id → category_code
+      const { data: cats } = await _sb.from('categories').select('id, category_code');
+      var catMap = {};
+      (cats || []).forEach(function(c) { catMap[c.id] = c.category_code; });
+
       finPayrollData = (data || []).map(function(p) {
+        var catId = p.lecturers?.category_id;
         return Object.assign({}, p, {
           lecturer_name: p.lecturers?.name || '-',
           nidn:          p.lecturers?.nidn || '-',
-          category_code: '-'
+          category_code: catId ? (catMap[catId] || '-') : '-'
         });
       });
+      // Urutkan berdasarkan nama dosen
+      finPayrollData.sort(function(a, b) { return (a.lecturer_name).localeCompare(b.lecturer_name, 'id'); });
 
       if (finPayrollData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--space-8);">Tidak ada data payroll untuk periode ini</td></tr>';
@@ -456,15 +470,20 @@
     var year  = parseInt(document.getElementById('reportYear').value);
     try {
       showLoading();
-      const { data, error } = await _sb.from('payroll')
-        .select('*, lecturers(name, nidn)')
-        .eq('period_month', month).eq('period_year', year);
-      if (error) throw error;
-      var rows_data = (data || []).map(function(p) {
+      const [payRes, catRes] = await Promise.all([
+        _sb.from('payroll').select('*, lecturers(name, nidn, category_id)')
+          .eq('period_month', month).eq('period_year', year),
+        _sb.from('categories').select('id, category_code')
+      ]);
+      if (payRes.error) throw payRes.error;
+      var catMap = {};
+      (catRes.data || []).forEach(function(c) { catMap[c.id] = c.category_code; });
+      var rows_data = (payRes.data || []).map(function(p) {
+        var catId = p.lecturers?.category_id;
         return Object.assign({}, p, {
           lecturer_name: p.lecturers?.name || '-',
           nidn:          p.lecturers?.nidn || '-',
-          category_code: '-'
+          category_code: catId ? (catMap[catId] || '-') : '-'
         });
       });
       if (rows_data.length === 0) { showToast('Tidak ada data untuk periode ini', 'warning'); return; }
