@@ -685,14 +685,14 @@
 
   <!-- Modal: Payroll Detail -->
   <div class="modal-overlay" id="payrollDetailModal" style="display:none;">
-    <div class="modal" style="max-width:480px;">
+    <div class="modal" style="max-width:560px;">
       <div class="modal-header">
         <h2 class="modal-title">Detail Slip Gaji</h2>
         <button class="modal-close" id="closePayrollDetailModal">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
         <div style="margin-bottom:var(--space-4);">
           <div style="font-size:18px;font-weight:700;" id="detailPayrollName">-</div>
           <div style="color:var(--text-secondary);font-size:13px;">
@@ -701,14 +701,23 @@
           </div>
           <div style="color:var(--text-secondary);font-size:13px;">Periode: <span id="detailPayrollPeriode">-</span></div>
         </div>
+
+        <!-- Breakdown per Matkul/Kategori -->
+        <div style="margin-bottom:var(--space-4);">
+          <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:var(--space-2);">Rincian per Mata Kuliah</div>
+          <div id="detailKategoriBreakdown" style="background:var(--surface-2);border-radius:var(--radius-md);padding:var(--space-3);">
+            <p style="font-size:12px;color:var(--text-tertiary);margin:0;">Memuat...</p>
+          </div>
+        </div>
+
         <div class="divider"></div>
         <table style="width:100%;border-collapse:collapse;">
           <tr style="border-bottom:1px solid var(--card-border);">
-            <td style="padding:8px 0;color:var(--text-secondary);">Jam Terjadwal</td>
+            <td style="padding:8px 0;color:var(--text-secondary);">Total Jam Terjadwal</td>
             <td style="padding:8px 0;text-align:right;" id="detailJamJadwal">-</td>
           </tr>
           <tr style="border-bottom:1px solid var(--card-border);">
-            <td style="padding:8px 0;color:var(--text-secondary);">Jam Hadir</td>
+            <td style="padding:8px 0;color:var(--text-secondary);">Total Jam Hadir</td>
             <td style="padding:8px 0;text-align:right;" id="detailJamHadir">-</td>
           </tr>
           <tr style="border-bottom:1px solid var(--card-border);">

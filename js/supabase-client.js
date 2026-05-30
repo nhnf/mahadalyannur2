@@ -15,13 +15,7 @@ const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
 });
 
 // ── AUTH WRAPPER ──────────────────────────────────────────────────────────────
-// Wrapper tipis di atas Supabase Auth agar kode lama tetap kompatibel
-
 var auth = {
-  /**
-   * Login — pakai Supabase Auth built-in
-   * Role dibaca dari app_metadata JWT
-   */
   async signInWithPassword(creds) {
     try {
       const { data, error } = await _sb.auth.signInWithPassword({
@@ -29,15 +23,12 @@ var auth = {
         password: creds.password
       });
       if (error) throw error;
-
-      // Ambil role dari app_metadata
       const role = data.user?.app_metadata?.role || 'lecturer';
       return {
         data: { user: { id: data.user.id, email: data.user.email, role } },
         error: null
       };
     } catch (err) {
-      // Terjemahkan pesan error Supabase ke Bahasa Indonesia
       var msg = err.message || 'Login gagal';
       if (msg.includes('Invalid login credentials')) msg = 'Email atau password salah';
       if (msg.includes('Email not confirmed'))       msg = 'Email belum dikonfirmasi';
@@ -49,13 +40,10 @@ var auth = {
   async getSession() {
     const { data, error } = await _sb.auth.getSession();
     if (error || !data.session) return { data: { session: null }, error };
-
     const user = data.session.user;
     const role = user?.app_metadata?.role || 'lecturer';
     return {
-      data: {
-        session: { user: { id: user.id, email: user.email, role } }
-      },
+      data: { session: { user: { id: user.id, email: user.email, role } } },
       error: null
     };
   },
@@ -117,9 +105,9 @@ async function calculatePayrollLocal(month, year) {
     .select('id').is('deleted_at', null).eq('is_active', true);
   if (lecRes.error) throw lecRes.error;
 
-  // Ambil day_of_week juga untuk hitung transport per hari
+  // Ambil semua kolom termasuk matkul dan kategori per baris
   const attRes = await _sb.from('v_attendance_monthly')
-    .select('lecturer_id, day_of_week, total_meetings, total_hadir, tarif_per_jam')
+    .select('lecturer_id, day_of_week, mata_kuliah_id, matkul_nama, category_id, category_code, tarif_per_jam, total_meetings, total_hadir')
     .eq('period_month', month).eq('period_year', year);
   if (attRes.error) throw attRes.error;
 
@@ -135,79 +123,66 @@ async function calculatePayrollLocal(month, year) {
     var attList = attByLec[lecId] || [];
     if (attList.length === 0) continue;
 
+    // ── HITUNG GAJI PER MATKUL/KATEGORI ──────────────────────────────────
     var totalScheduled = 0, totalAttended = 0, fixed = 0, attendance = 0;
+    var detailsByKey = {}; // key = mata_kuliah_id|category_id
+
     attList.forEach(function(a) {
       var tarif    = parseFloat(a.tarif_per_jam || 0);
       var meetings = a.total_meetings || 0;
       var hadir    = a.total_hadir    || 0;
+
       totalScheduled += meetings;
       totalAttended  += hadir;
       fixed      += meetings * tarif * 0.5;
       attendance += hadir    * tarif * 0.5;
+
+      // Akumulasi per matkul+kategori untuk detail
+      var key = (a.mata_kuliah_id || 'null') + '|' + (a.category_id || 'null');
+      if (!detailsByKey[key]) {
+        detailsByKey[key] = {
+          mata_kuliah_id: a.mata_kuliah_id || null,
+          matkul_nama:    a.matkul_nama    || '-',
+          category_id:    a.category_id    || null,
+          category_code:  a.category_code  || '-',
+          tarif_per_jam:  tarif,
+          total_meetings: 0,
+          total_hadir:    0,
+          fixed_amount:   0,
+          attend_amount:  0
+        };
+      }
+      detailsByKey[key].total_meetings += meetings;
+      detailsByKey[key].total_hadir    += hadir;
+      detailsByKey[key].fixed_amount   += meetings * tarif * 0.5;
+      detailsByKey[key].attend_amount  += hadir    * tarif * 0.5;
     });
 
     // ── HITUNG TRANSPORT PER HARI ──────────────────────────────────────────
-    // Logika: per hari yang ada kehadiran:
-    //   sesi ke-1 hadir → Rp 15.000
-    //   sesi ke-2 hadir → +Rp 5.000
-    //   sesi ke-3 hadir → +Rp 5.000, dst.
-    // Rumus per hari: 15.000 + (sesi_hadir_hari_itu - 1) × 5.000
-    //              = 10.000 + sesi_hadir_hari_itu × 5.000
-    // (hanya jika sesi_hadir_hari_itu > 0)
-
-    // Group total_hadir per hari
-    // Setiap baris attendance = 1 sesi di 1 hari, total_hadir = berapa kali hadir
-    // dalam bulan itu (misal 4 pertemuan, hadir 3 → total_hadir=3)
-    // Untuk transport: kita hitung per "kunjungan hari" bukan per pertemuan
-    // Asumsi: 1 sesi = 1 kunjungan di hari itu (bukan per pertemuan dalam bulan)
-    // Jadi group per hari, hitung berapa sesi yang punya total_hadir > 0
-
-    var hadirPerHari = {};
+    // Per hari: sesi ke-1 hadir → Rp 15.000, sesi berikutnya → +Rp 5.000
+    // Dikalikan jumlah kunjungan (minggu) dalam bulan
+    var transport = 0;
+    var hariList  = {};
     attList.forEach(function(a) {
       var hari = a.day_of_week || 'unknown';
-      if (!hadirPerHari[hari]) hadirPerHari[hari] = 0;
-      // Jika sesi ini punya kehadiran (total_hadir > 0), hitung sebagai 1 sesi aktif
-      if ((a.total_hadir || 0) > 0) hadirPerHari[hari]++;
+      if (!hariList[hari]) hariList[hari] = [];
+      hariList[hari].push(a);
     });
 
-    var transport = 0;
-    Object.keys(hadirPerHari).forEach(function(hari) {
-      var sesiHadir = hadirPerHari[hari];
-      if (sesiHadir > 0) {
-        // Sesi pertama: 15.000, sesi berikutnya: +5.000 masing-masing
-        transport += 15000 + (sesiHadir - 1) * 5000;
-      }
-    });
-
-    // Kalikan dengan jumlah minggu dalam bulan (total_hadir sudah akumulasi per bulan)
-    // Tapi transport dihitung per kunjungan (per minggu), bukan flat per bulan
-    // Perlu hitung berapa kali dosen hadir per hari dalam bulan
-    // Gunakan total_hadir sebagai jumlah pertemuan hadir dalam bulan
-    transport = 0;
-    Object.keys(hadirPerHari).forEach(function(hari) {
-      // Cari semua sesi di hari ini
-      var sesiDiHari = attList.filter(function(a) { return a.day_of_week === hari; });
-
-      // Hitung berapa pertemuan (minggu) dosen hadir di hari ini
-      // Ambil max total_hadir dari semua sesi di hari ini sebagai jumlah kunjungan
-      // (karena setiap minggu dosen datang 1 kali ke kampus di hari itu)
-      var maxHadir = Math.max.apply(null, sesiDiHari.map(function(a) { return a.total_hadir || 0; }));
-
+    Object.keys(hariList).forEach(function(hari) {
+      var sesiDiHari = hariList[hari];
+      var maxHadir   = Math.max.apply(null, sesiDiHari.map(function(a) { return a.total_hadir || 0; }));
       if (maxHadir > 0) {
-        // Hitung berapa sesi aktif (punya kehadiran) di hari ini
         var sesiAktif = sesiDiHari.filter(function(a) { return (a.total_hadir || 0) > 0; }).length;
-
-        // Per kunjungan (per minggu): 15.000 + (sesiAktif-1) × 5.000
         var transportPerKunjungan = 15000 + (sesiAktif - 1) * 5000;
-
-        // Total transport hari ini = transport per kunjungan × jumlah kunjungan (maxHadir)
         transport += transportPerKunjungan * maxHadir;
       }
     });
 
     var total = fixed + attendance + transport;
 
-    const { error } = await _sb.from('payroll').upsert({
+    // ── UPSERT PAYROLL HEADER ─────────────────────────────────────────────
+    const { data: payrollRow, error: payErr } = await _sb.from('payroll').upsert({
       lecturer_id:                 lecId,
       period_month:                month,
       period_year:                 year,
@@ -218,10 +193,29 @@ async function calculatePayrollLocal(month, year) {
       transportation_amount:       transport,
       total_salary:                total,
       updated_at:                  new Date().toISOString()
-    }, { onConflict: 'lecturer_id,period_month,period_year' });
-    if (error) throw error;
+    }, { onConflict: 'lecturer_id,period_month,period_year' }).select('id').single();
+    if (payErr) throw payErr;
+
+    // ── UPSERT PAYROLL DETAILS (per matkul/kategori) ──────────────────────
+    await _sb.from('payroll_details').delete().eq('payroll_id', payrollRow.id);
+
+    var detailRows = Object.values(detailsByKey).map(function(d) {
+      return Object.assign({}, d, {
+        payroll_id:   payrollRow.id,
+        lecturer_id:  lecId,
+        period_month: month,
+        period_year:  year
+      });
+    });
+
+    if (detailRows.length > 0) {
+      const { error: detErr } = await _sb.from('payroll_details').insert(detailRows);
+      if (detErr) throw detErr;
+    }
+
     processed++;
   }
+
   return { success: true, processed };
 }
 

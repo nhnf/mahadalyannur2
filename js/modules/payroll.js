@@ -108,20 +108,82 @@ function renderPayrollTable() {
   }).join('');
 }
 
-function viewPayrollDetail(id) {
+async function viewPayrollDetail(id) {
   var p = payrollData.find(function(x) { return x.id === id; });
   if (!p) return;
-  document.getElementById('detailPayrollName').textContent     = p.lecturer_name;
-  document.getElementById('detailPayrollName').dataset.id      = p.id;
-  document.getElementById('detailPayrollNidn').textContent     = p.nidn;
-  document.getElementById('detailPayrollKategori').textContent = p.category_code;
-  document.getElementById('detailPayrollPeriode').textContent  = getMonthName(p.period_month) + ' ' + p.period_year;
+
+  document.getElementById('detailPayrollName').textContent    = p.lecturer_name;
+  document.getElementById('detailPayrollName').dataset.id     = p.id;
+  document.getElementById('detailPayrollNidn').textContent    = p.nidn;
+  document.getElementById('detailPayrollPeriode').textContent = getMonthName(p.period_month) + ' ' + p.period_year;
   document.getElementById('detailJamJadwal').textContent = (p.total_scheduled_hours||0) + ' jam';
   document.getElementById('detailJamHadir').textContent  = (p.total_attended_hours||0)  + ' jam';
   document.getElementById('detailGajiTetap').textContent = formatCurrency(p.fixed_component_amount);
   document.getElementById('detailGajiHadir').textContent = formatCurrency(p.attendance_component_amount);
   document.getElementById('detailTransport').textContent = formatCurrency(p.transportation_amount);
   document.getElementById('detailTotalGaji').textContent = formatCurrency(p.total_salary);
+
+  // Tampilkan breakdown per matkul/kategori
+  var katEl = document.getElementById('detailPayrollKategori');
+  var breakdownEl = document.getElementById('detailKategoriBreakdown');
+
+  if (breakdownEl) {
+    breakdownEl.innerHTML = '<div style="text-align:center;padding:8px;"><div class="spinner spinner-sm"></div></div>';
+    try {
+      const { data: details } = await _sb.from('payroll_details')
+        .select('*').eq('payroll_id', id).order('category_code').order('matkul_nama');
+
+      if (details && details.length > 0) {
+        // Update label kategori di header modal
+        var katCodes = [...new Set(details.map(function(d) { return d.category_code || '-'; }))].sort();
+        if (katEl) katEl.textContent = katCodes.join(', ');
+
+        // Group per kategori
+        var byKat = {};
+        details.forEach(function(d) {
+          var kat = d.category_code || '-';
+          if (!byKat[kat]) byKat[kat] = [];
+          byKat[kat].push(d);
+        });
+
+        var html = '';
+        Object.keys(byKat).sort().forEach(function(kat) {
+          html += '<div style="margin-bottom:var(--space-4);">';
+          html += '<div style="font-size:12px;font-weight:700;margin-bottom:6px;">' +
+            '<span class="badge badge-blue">' + escapeHtml(kat) + '</span>' +
+            ' <span style="color:var(--text-secondary);">— ' + formatCurrency(byKat[kat][0].tarif_per_jam) + '/jam</span></div>';
+          html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+          html += '<thead><tr style="background:var(--surface-2);">' +
+            '<th style="padding:4px 8px;text-align:left;font-weight:600;">Mata Kuliah</th>' +
+            '<th style="padding:4px 8px;text-align:center;font-weight:600;">Jadwal</th>' +
+            '<th style="padding:4px 8px;text-align:center;font-weight:600;">Hadir</th>' +
+            '<th style="padding:4px 8px;text-align:right;font-weight:600;">Gaji Tetap</th>' +
+            '<th style="padding:4px 8px;text-align:right;font-weight:600;">Gaji Hadir</th>' +
+            '</tr></thead><tbody>';
+          byKat[kat].forEach(function(d) {
+            html += '<tr style="border-bottom:1px solid var(--card-border);">' +
+              '<td style="padding:4px 8px;">' + escapeHtml(d.matkul_nama || '-') + '</td>' +
+              '<td style="padding:4px 8px;text-align:center;">' + (d.total_meetings||0) + '</td>' +
+              '<td style="padding:4px 8px;text-align:center;">' + (d.total_hadir||0) + '</td>' +
+              '<td style="padding:4px 8px;text-align:right;">' + formatCurrency(d.fixed_amount) + '</td>' +
+              '<td style="padding:4px 8px;text-align:right;">' + formatCurrency(d.attend_amount) + '</td>' +
+              '</tr>';
+          });
+          html += '</tbody></table></div>';
+        });
+        breakdownEl.innerHTML = html;
+      } else {
+        if (katEl) katEl.textContent = p.category_code || '-';
+        breakdownEl.innerHTML = '<p style="font-size:12px;color:var(--text-tertiary);margin:0;">Belum ada detail. Klik "Hitung Payroll" untuk mengisi data ini.</p>';
+      }
+    } catch(e) {
+      if (katEl) katEl.textContent = p.category_code || '-';
+      breakdownEl.innerHTML = '<p style="font-size:12px;color:var(--danger);margin:0;">Gagal memuat detail.</p>';
+    }
+  } else {
+    if (katEl) katEl.textContent = p.category_code || '-';
+  }
+
   document.getElementById('payrollDetailModal').style.display = 'flex';
 }
 
