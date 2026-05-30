@@ -117,8 +117,9 @@ async function calculatePayrollLocal(month, year) {
     .select('id').is('deleted_at', null).eq('is_active', true);
   if (lecRes.error) throw lecRes.error;
 
+  // Ambil day_of_week juga untuk hitung transport per hari
   const attRes = await _sb.from('v_attendance_monthly')
-    .select('lecturer_id, total_meetings, total_hadir, tarif_per_jam')
+    .select('lecturer_id, day_of_week, total_meetings, total_hadir, tarif_per_jam')
     .eq('period_month', month).eq('period_year', year);
   if (attRes.error) throw attRes.error;
 
@@ -145,8 +146,66 @@ async function calculatePayrollLocal(month, year) {
       attendance += hadir    * tarif * 0.5;
     });
 
-    var transport = totalAttended * 15000;
-    var total     = fixed + attendance + transport;
+    // ── HITUNG TRANSPORT PER HARI ──────────────────────────────────────────
+    // Logika: per hari yang ada kehadiran:
+    //   sesi ke-1 hadir → Rp 15.000
+    //   sesi ke-2 hadir → +Rp 5.000
+    //   sesi ke-3 hadir → +Rp 5.000, dst.
+    // Rumus per hari: 15.000 + (sesi_hadir_hari_itu - 1) × 5.000
+    //              = 10.000 + sesi_hadir_hari_itu × 5.000
+    // (hanya jika sesi_hadir_hari_itu > 0)
+
+    // Group total_hadir per hari
+    // Setiap baris attendance = 1 sesi di 1 hari, total_hadir = berapa kali hadir
+    // dalam bulan itu (misal 4 pertemuan, hadir 3 → total_hadir=3)
+    // Untuk transport: kita hitung per "kunjungan hari" bukan per pertemuan
+    // Asumsi: 1 sesi = 1 kunjungan di hari itu (bukan per pertemuan dalam bulan)
+    // Jadi group per hari, hitung berapa sesi yang punya total_hadir > 0
+
+    var hadirPerHari = {};
+    attList.forEach(function(a) {
+      var hari = a.day_of_week || 'unknown';
+      if (!hadirPerHari[hari]) hadirPerHari[hari] = 0;
+      // Jika sesi ini punya kehadiran (total_hadir > 0), hitung sebagai 1 sesi aktif
+      if ((a.total_hadir || 0) > 0) hadirPerHari[hari]++;
+    });
+
+    var transport = 0;
+    Object.keys(hadirPerHari).forEach(function(hari) {
+      var sesiHadir = hadirPerHari[hari];
+      if (sesiHadir > 0) {
+        // Sesi pertama: 15.000, sesi berikutnya: +5.000 masing-masing
+        transport += 15000 + (sesiHadir - 1) * 5000;
+      }
+    });
+
+    // Kalikan dengan jumlah minggu dalam bulan (total_hadir sudah akumulasi per bulan)
+    // Tapi transport dihitung per kunjungan (per minggu), bukan flat per bulan
+    // Perlu hitung berapa kali dosen hadir per hari dalam bulan
+    // Gunakan total_hadir sebagai jumlah pertemuan hadir dalam bulan
+    transport = 0;
+    Object.keys(hadirPerHari).forEach(function(hari) {
+      // Cari semua sesi di hari ini
+      var sesiDiHari = attList.filter(function(a) { return a.day_of_week === hari; });
+
+      // Hitung berapa pertemuan (minggu) dosen hadir di hari ini
+      // Ambil max total_hadir dari semua sesi di hari ini sebagai jumlah kunjungan
+      // (karena setiap minggu dosen datang 1 kali ke kampus di hari itu)
+      var maxHadir = Math.max.apply(null, sesiDiHari.map(function(a) { return a.total_hadir || 0; }));
+
+      if (maxHadir > 0) {
+        // Hitung berapa sesi aktif (punya kehadiran) di hari ini
+        var sesiAktif = sesiDiHari.filter(function(a) { return (a.total_hadir || 0) > 0; }).length;
+
+        // Per kunjungan (per minggu): 15.000 + (sesiAktif-1) × 5.000
+        var transportPerKunjungan = 15000 + (sesiAktif - 1) * 5000;
+
+        // Total transport hari ini = transport per kunjungan × jumlah kunjungan (maxHadir)
+        transport += transportPerKunjungan * maxHadir;
+      }
+    });
+
+    var total = fixed + attendance + transport;
 
     const { error } = await _sb.from('payroll').upsert({
       lecturer_id:                 lecId,
