@@ -1,7 +1,8 @@
 ﻿/**
  * Payroll Module — Supabase
  */
-var payrollData = [];
+var payrollData    = [];   // semua data dari DB
+var filteredPayroll = [];  // data setelah filter pencarian
 
 async function calculatePayroll() {
   var month = parseInt(document.getElementById('filterPayrollMonth').value);
@@ -53,6 +54,10 @@ async function loadPayroll() {
     });
     // Urutkan berdasarkan nama dosen
     payrollData.sort(function(a, b) { return a.lecturer_name.localeCompare(b.lecturer_name, 'id'); });
+    filteredPayroll = payrollData.slice();
+    // Reset search box
+    var searchEl = document.getElementById('searchPayroll');
+    if (searchEl) searchEl.value = '';
     renderPayrollTable();
   } catch(err) {
     console.error('loadPayroll error:', err);
@@ -61,14 +66,27 @@ async function loadPayroll() {
   }
 }
 
+function filterPayroll() {
+  var q = (document.getElementById('searchPayroll')?.value || '').toLowerCase().trim();
+  filteredPayroll = !q ? payrollData.slice() : payrollData.filter(function(p) {
+    return (p.lecturer_name && p.lecturer_name.toLowerCase().includes(q)) ||
+           (p.nidn          && p.nidn.toLowerCase().includes(q)) ||
+           (p.category_code && p.category_code.toLowerCase().includes(q));
+  });
+  renderPayrollTable();
+}
+
 function renderPayrollTable() {
   var tbody = document.getElementById('payrollTableBody');
   if (!tbody) return;
-  if (payrollData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:var(--space-8);">Belum ada data. Klik "Hitung Payroll" untuk menghitung.</td></tr>';
+  if (filteredPayroll.length === 0) {
+    var msg = payrollData.length === 0
+      ? 'Belum ada data. Klik "Hitung Payroll" untuk menghitung.'
+      : 'Tidak ada dosen yang cocok dengan pencarian.';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:var(--space-8);">' + msg + '</td></tr>';
     return;
   }
-  tbody.innerHTML = payrollData.map(function(p) {
+  tbody.innerHTML = filteredPayroll.map(function(p) {
     return '<tr>' +
       '<td><strong>' + escapeHtml(p.lecturer_name) + '</strong><br><small class="text-secondary">' + escapeHtml(p.nidn) + '</small></td>' +
       '<td><span class="badge badge-blue">' + escapeHtml(p.category_code) + '</span></td>' +
@@ -143,11 +161,12 @@ function printSlip(id) {
 }
 
 function exportToExcel() {
-  if (payrollData.length === 0) { showToast('Tidak ada data untuk diekspor', 'warning'); return; }
+  var dataToExport = filteredPayroll.length > 0 ? filteredPayroll : payrollData;
+  if (dataToExport.length === 0) { showToast('Tidak ada data untuk diekspor', 'warning'); return; }
   var month = getMonthName(parseInt(document.getElementById('filterPayrollMonth').value));
   var year  = document.getElementById('filterPayrollYear').value;
   var headers = ['NIDN','Nama Dosen','Kategori','Jam Jadwal','Jam Hadir','Gaji Tetap','Gaji Kehadiran','Transport','Total Gaji'];
-  var rows = payrollData.map(function(p) {
+  var rows = dataToExport.map(function(p) {
     // escapeCsv mencegah data dengan koma merusak format CSV
     return [
       escapeCsv(p.nidn||''),
@@ -175,6 +194,8 @@ function initPayrollModule() {
   if (calcBtn) calcBtn.addEventListener('click', calculatePayroll);
   var expBtn = document.getElementById('exportExcelBtn');
   if (expBtn) expBtn.addEventListener('click', exportToExcel);
+  var searchInput = document.getElementById('searchPayroll');
+  if (searchInput) searchInput.addEventListener('input', debounce(filterPayroll, 250));
   var closeDetailBtn = document.getElementById('closePayrollDetailModal');
   if (closeDetailBtn) closeDetailBtn.addEventListener('click', closePayrollDetailModal);
   var detailModal = document.getElementById('payrollDetailModal');
