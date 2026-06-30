@@ -9,6 +9,7 @@ node_modules/
 
 # App config (berisi credentials — jangan commit)
 config.js
+kilo.json
 
 # Supabase
 .supabase/

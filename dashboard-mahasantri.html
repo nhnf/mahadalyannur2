@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Mahasantri - Sistem Administrasi Ma'had Aly An-Nur II</title>
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <style>
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 120px repeat(4, 1fr);
+      gap: 1px;
+      background: var(--card-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+    .schedule-grid-header {
+      background: var(--primary-500);
+      color: white;
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      font-size: 13px;
+      text-align: center;
+    }
+    .schedule-grid-day {
+      background: var(--surface-2);
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+    }
+    .schedule-grid-cell {
+      background: var(--card-bg);
+      padding: var(--space-3);
+      min-height: 70px;
+      font-size: 12px;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .schedule-grid-cell:hover {
+      background: var(--primary-50);
+    }
+    .schedule-grid-cell.has-class {
+      border-left: 3px solid var(--primary-500);
+    }
+    .schedule-grid-cell.blocked {
+      background: #FEF2F2;
+      border-left: 3px solid var(--danger);
+    }
+    .schedule-grid-cell.blocked .cell-content {
+      color: #991B1B;
+      font-style: italic;
+    }
+    .cell-matkul {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+    .cell-lecturer {
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    .cell-time {
+      color: var(--primary-600);
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .info-banner {
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+    }
+    .info-banner-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .info-banner h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .info-banner p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .legend {
+      display: flex;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    .legend-dot.active  { background: var(--primary-500); }
+    .legend-dot.blocked { background: var(--danger); }
+    .legend-dot.empty   { background: var(--surface-3); }
+
+    @media (max-width: 767px) {
+      .schedule-grid {
+        grid-template-columns: 80px repeat(4, 1fr);
+        font-size: 11px;
+      }
+      .schedule-grid-header,
+      .schedule-grid-day {
+        padding: var(--space-2);
+        font-size: 11px;
+      }
+      .schedule-grid-cell {
+        padding: var(--space-2);
+        min-height: 50px;
+      }
+      .cell-matkul { font-size: 10px; }
+      .cell-lecturer { font-size: 9px; }
+      .info-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-3);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard-mahasantri.html" class="sidebar-logo">
+          <div class="sidebar-logo-icon">G</div>
+          <span class="sidebar-logo-text">Ma'had Aly</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-page="dashboard">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#jadwal" class="nav-item" data-page="jadwal">
+          <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span>Jadwal Mingguan</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div style="padding:var(--space-3) var(--space-4);margin-bottom:var(--space-2);">
+          <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:2px;">Login sebagai</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary);" id="userNameSidebar">-</div>
+          <span class="badge badge-purple" style="margin-top:4px;">Mahasantri</span>
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn" style="width:100%;justify-content:flex-start;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-header-content">
+          <div>
+            <button class="menu-toggle" id="menuToggle">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+          </div>
+          <div class="page-actions">
+            <div class="flex items-center gap-3">
+              <span class="body-sm text-secondary" id="userEmail"></span>
+              <div class="avatar avatar-md" style="background:var(--primary-500);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;" id="userInitial">M</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-body">
+
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page-content">
+          <!-- Info Banner -->
+          <div class="info-banner">
+            <div class="info-banner-icon">
+              <svg width="32" height="32" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            </div>
+            <div>
+              <h2>Assalamualaikum, <span id="greetName">Mahasantri</span></h2>
+              <p>Selamat datang di portal informasi jadwal perkuliahan Anda</p>
+            </div>
+          </div>
+
+          <!-- Mahasantri Info -->
+          <div class="card mb-6">
+            <div class="card-header"><h2 class="card-title">Informasi Mahasantri</h2></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);">
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">NIM</div>
+                  <div style="font-weight:600;" id="infoNim">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Nama</div>
+                  <div style="font-weight:600;" id="infoName">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Semester</div>
+                  <div id="infoSemester">-</div>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px;">Kelas</div>
+                  <div id="infoClassroom">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="content-grid content-grid-4 mb-6">
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Mata Kuliah</div>
+                <div class="stat-card-value" id="statMatkul">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-green">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Hari Aktif</div>
+                <div class="stat-card-value" id="statDays">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-amber">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Total Sesi/Minggu</div>
+                <div class="stat-card-value" id="statSessions">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon icon-pill-purple">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Kelas</div>
+                <div class="stat-card-value" id="statClassroom">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Preview -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Jadwal Hari Ini</h2>
+            </div>
+            <div class="card-body" id="todaySchedulePreview">
+              <div class="empty-state">
+                <div class="empty-state-title">Memuat jadwal...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JADWAL MINGGUAN PAGE -->
+        <div id="page-jadwal" class="page-content" style="display:none;">
+          <h1 class="display-lg mb-6">Jadwal Mingguan</h1>
+
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot active"></div> Ada Kelas</div>
+            <div class="legend-item"><div class="legend-dot blocked"></div> Tidak Diperbolehkan</div>
+            <div class="legend-item"><div class="legend-dot empty"></div> Kosong</div>
+          </div>
+
+          <div class="data-table-wrapper" style="overflow-x:auto;">
+            <div id="weeklyScheduleGrid">
+              <div style="text-align:center;padding:var(--space-8);">
+                <div class="spinner"></div>
+                <p style="margin-top:var(--space-4);color:var(--text-secondary);">Memuat jadwal mingguan...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail Table below grid -->
+          <div class="card mt-6">
+            <div class="card-header">
+              <h2 class="card-title">Detail Jadwal</h2>
+            </div>
+            <div class="data-table-wrapper">
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Hari</th>
+                      <th>Sesi</th>
+                      <th>Jam</th>
+                      <th>Mata Kuliah</th>
+                      <th>Dosen</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scheduleDetailBody">
+                    <tr><td colspan="6" style="text-align:center;padding:var(--space-8);">
+                      <div class="spinner"></div>
+                    </td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" style="position:fixed;top:var(--space-6);right:var(--space-6);z-index:10000;display:flex;flex-direction:column;gap:var(--space-3);"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;">
+    <div class="spinner" style="width:48px;height:48px;border-width:4px;border-color:white;border-top-color:transparent;"></div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-overlay" id="logoutModal" style="display:none;">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Konfirmasi Logout</h3>
+      </div>
+      <div class="modal-body">
+        <p>Apakah Anda yakin ingin keluar dari sistem?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="document.getElementById('logoutModal').style.display='none'">Batal</button>
+        <button class="btn btn-danger" id="confirmLogoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase + App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+    // ── NAVIGATION ─────────────────────────────────────────────────
+    var navItems  = document.querySelectorAll('.nav-item');
+    var pages     = document.querySelectorAll('.page-content');
+
+    function navigateTo(pageName) {
+      pages.forEach(function(p) { p.style.display = 'none'; });
+      navItems.forEach(function(n) { n.classList.remove('active'); });
+      var target = document.getElementById('page-' + pageName);
+      var nav    = document.querySelector('[data-page="' + pageName + '"]');
+      if (target) target.style.display = 'block';
+      if (nav)    nav.classList.add('active');
+    }
+
+    navItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        var page = this.getAttribute('data-page');
+        navigateTo(page);
+        if (page === 'jadwal') loadWeeklySchedule();
+      });
+    });
+
+    // Mobile sidebar toggle
+    var menuToggle    = document.getElementById('menuToggle');
+    var sidebar       = document.getElementById('sidebar');
+    var sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (menuToggle) menuToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('active');
+    });
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', function() {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('active');
+    });
+
+    // ── DATA ───────────────────────────────────────────────────────
+    var myProfile   = null;
+    var mySchedule  = [];
+
+    var DAYS_ORDER  = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    var SESSIONS    = [
+      { slot: 1, name: 'Pagi 1',  time: '08:00 – 09:40' },
+      { slot: 2, name: 'Pagi 2',  time: '10:00 – 11:40' },
+      { slot: 3, name: 'Sore',    time: '13:30 – 15:10' },
+      { slot: 4, name: 'Malam',   time: '19:30 – 21:10' }
+    ];
+
+    var BLOCKED_SLOTS = { 'Kamis-4': 'Kamis malam tidak diperbolehkan' };
+
+    // ── LOAD PROFILE ───────────────────────────────────────────────
+    async function loadMyProfile(email) {
+      try {
+        var res = await _sb.from('mahasantri')
+          .select('id, nim, nama, semester, classroom, angkatan, is_active')
+          .eq('email', email)
+          .is('deleted_at', null)
+          .limit(1)
+          .single();
+
+        if (res.error) {
+          // If not found by email, try by NIM (some users may not have email set)
+          console.warn('Profile not found by email, showing guest mode');
+          document.getElementById('greetName').textContent = email.split('@')[0];
+          document.getElementById('infoName').textContent = email;
+          return;
+        }
+
+        myProfile = res.data;
+        document.getElementById('greetName').textContent   = myProfile.nama;
+        document.getElementById('userNameSidebar').textContent = myProfile.nama;
+        document.getElementById('infoNim').textContent      = myProfile.nim || '-';
+        document.getElementById('infoName').textContent     = myProfile.nama;
+        document.getElementById('infoSemester').textContent = myProfile.semester || '-';
+        document.getElementById('infoClassroom').textContent = myProfile.classroom || '-';
+        document.getElementById('statClassroom').textContent = myProfile.classroom || '-';
+
+        if (myProfile.nama) {
+          document.getElementById('userInitial').textContent = myProfile.nama.charAt(0).toUpperCase();
+        }
+
+        // Auto load schedule
+        loadMyScheduleData();
+      } catch(err) {
+        console.error('loadMyProfile error:', err);
+      }
+    }
+
+    // ── LOAD SCHEDULE DATA ─────────────────────────────────────────
+    async function loadMyScheduleData() {
+      if (!myProfile) return;
+      try {
+        var res = await _sb.from('v_mahasantri_schedule')
+          .select('*')
+          .eq('mahasantri_id', myProfile.id)
+          .order('day_of_week');
+
+        if (res.error) throw res.error;
+        mySchedule = res.data || [];
+        updateStats();
+        renderTodayPreview();
+      } catch(err) {
+        console.error('loadMyScheduleData error:', err);
+      }
+    }
+
+    // ── UPDATE STATS ───────────────────────────────────────────────
+    function updateStats() {
+      var matkuls = {};
+      var days    = {};
+      mySchedule.forEach(function(s) {
+        if (s.mata_kuliah_nama) matkuls[s.mata_kuliah_nama] = true;
+        if (s.day_of_week)      days[s.day_of_week] = true;
+      });
+      document.getElementById('statMatkul').textContent  = Object.keys(matkuls).length;
+      document.getElementById('statDays').textContent    = Object.keys(days).length;
+      document.getElementById('statSessions').textContent = mySchedule.length;
+    }
+
+    // ── TODAY PREVIEW ──────────────────────────────────────────────
+    function renderTodayPreview() {
+      var container = document.getElementById('todaySchedulePreview');
+      var dayNames  = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      var today     = dayNames[new Date().getDay()];
+
+      var todayItems = mySchedule.filter(function(s) { return s.day_of_week === today; });
+
+      if (todayItems.length === 0) {
+        container.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="empty-state-icon">📅</div>' +
+            '<div class="empty-state-title">Tidak ada jadwal hari ini</div>' +
+            '<div class="empty-state-description">Hari ini: ' + today + '</div>' +
+          '</div>';
+        return;
+      }
+
+      container.innerHTML = todayItems.map(function(s) {
+        return '<div style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--card-border);">' +
+          '<div style="min-width:80px;font-size:13px;font-weight:600;color:var(--primary-600);">' + escapeHtml(s.time_range || '-') + '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="font-weight:600;font-size:14px;">' + escapeHtml(s.mata_kuliah_nama || '-') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(s.lecturer_name || '-') + '</div>' +
+          '</div>' +
+          '<div><span class="badge badge-blue">' + escapeHtml(s.session_name || '-') + '</span></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // ── WEEKLY SCHEDULE GRID ───────────────────────────────────────
+    function loadWeeklySchedule() {
+      renderScheduleGrid();
+      renderScheduleDetailTable();
+    }
+
+    function renderScheduleGrid() {
+      var container = document.getElementById('weeklyScheduleGrid');
+      if (!container) return;
+
+      // Build lookup: day+slot → schedule item
+      var lookup = {};
+      mySchedule.forEach(function(s) {
+        var key = s.day_of_week + '-' + s.session_slot;
+        lookup[key] = s;
+      });
+
+      var html = '<div class="schedule-grid">';
+
+      // Header row
+      html += '<div class="schedule-grid-header">Hari / Sesi</div>';
+      SESSIONS.forEach(function(sess) {
+        html += '<div class="schedule-grid-header">' + escapeHtml(sess.name) + '<br><span style="font-weight:400;font-size:11px;opacity:0.9;">' + escapeHtml(sess.time) + '</span></div>';
+      });
+
+      // Data rows
+      DAYS_ORDER.forEach(function(day) {
+        html += '<div class="schedule-grid-day">' + escapeHtml(day) + '</div>';
+        SESSIONS.forEach(function(sess) {
+          var key     = day + '-' + sess.slot;
+          var sched   = lookup[key];
+          var blocked = BLOCKED_SLOTS[key];
+          var cls     = 'schedule-grid-cell';
+
+          if (blocked) {
+            cls += ' blocked';
+            html += '<div class="' + cls + '">' +
+              '<div class="cell-content" style="font-size:11px;color:#991B1B;">🚫 ' + escapeHtml(blocked) + '</div>' +
+            '</div>';
+          } else if (sched) {
+            cls += ' has-class';
+            html += '<div class="' + cls + '">' +
+              '<div class="cell-time">' + escapeHtml(sched.time_range || '') + '</div>' +
+              '<div class="cell-matkul">' + escapeHtml(sched.mata_kuliah_nama || '-') + '</div>' +
+              '<div class="cell-lecturer">' + escapeHtml(sched.lecturer_name || '') + '</div>' +
+            '</div>';
+          } else {
+            html += '<div class="' + cls + '"><div class="cell-content" style="color:var(--text-tertiary);font-size:11px;">-</div></div>';
+          }
+        });
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderScheduleDetailTable() {
+      var tbody = document.getElementById('scheduleDetailBody');
+      if (!tbody) return;
+
+      if (mySchedule.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:var(--space-8);">Tidak ada data jadwal ditemukan</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = mySchedule.map(function(s) {
+        var statusBadge = s.schedule_status === 'active'
+          ? '<span class="badge badge-green">Aktif</span>'
+          : '<span class="badge badge-amber">' + escapeHtml(s.schedule_status || '-') + '</span>';
+        return '<tr>' +
+          '<td><strong>' + escapeHtml(s.day_of_week) + '</strong></td>' +
+          '<td><span class="badge badge-blue">' + escapeHtml(s.session_name || '-') + '</span></td>' +
+          '<td>' + escapeHtml(s.time_range || '-') + '</td>' +
+          '<td>' + escapeHtml(s.mata_kuliah_nama || '-') + '</td>' +
+          '<td>' + escapeHtml(s.lecturer_name || '-') + '</td>' +
+          '<td>' + statusBadge + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    // ── INIT ───────────────────────────────────────────────────────
+    (async function init() {
+      // Route Guard
+      var res = await auth.getSession();
+      if (!res.data || !res.data.session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      var role = res.data.session.user.role || '';
+      if (role !== 'Mahasantri' && role !== 'mahasantri') {
+        // Not a mahasantri — redirect based on their actual role
+        if (role === 'Super Admin' || role === 'Admin Kurikulum') window.location.href = 'dashboard-admin.html';
+        else if (role === 'Operator Jadwal') window.location.href = 'dashboard-finance.html';
+        else window.location.href = 'dashboard-lecturer.html';
+        return;
+      }
+
+      var email = res.data.session.user.email || '';
+      document.getElementById('userEmail').textContent = email;
+      if (email) {
+        var initial = email.charAt(0).toUpperCase();
+        document.getElementById('userInitial').textContent = initial;
+        loadMyProfile(email);
+      }
+
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        document.getElementById('logoutModal').style.display = 'flex';
+      });
+      document.getElementById('confirmLogoutBtn').addEventListener('click', async function() {
+        await auth.signOut();
+        window.location.href = 'index.html';
+      });
+    })();
+  </script>
+</body>
+</html>

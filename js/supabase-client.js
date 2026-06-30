@@ -3,8 +3,10 @@
  * JWT di-set otomatis, RLS berfungsi penuh.
  */
 
-var SUPABASE_URL  = 'https://unyfvjugdyrdirkdrifw.supabase.co';
-var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVueWZ2anVnZHlyZGlya2RyaWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTM2MjMsImV4cCI6MjA5NTI4OTYyM30.J9694tJehud3vlWZccqcZVyb_xsHSjO9lyvN3twPPmw';
+// Baca config dari config.js (window.__APP_CONFIG__)
+var _cfg = window.__APP_CONFIG__ || {};
+var SUPABASE_URL  = _cfg.SUPABASE_URL  || 'https://unyfvjugdyrdirkdrifw.supabase.co';
+var SUPABASE_ANON = _cfg.SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVueWZ2anVnZHlyZGlya2RyaWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTM2MjMsImV4cCI6MjA5NTI4OTYyM30.J9694tJehud3vlWZccqcZVyb_xsHSjO9lyvN3twPPmw';
 
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
@@ -13,6 +15,31 @@ const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
     detectSessionInUrl: false
   }
 });
+
+
+function normalizeRole(rawRole) {
+  var role = String(rawRole || '').trim();
+  if (!role) return 'Viewer';
+
+  var lower = role.toLowerCase();
+  if (lower === 'super admin' || lower === 'super_admin' || lower === 'admin') return 'Super Admin';
+  if (lower === 'admin kurikulum' || lower === 'admin_kurikulum' || lower === 'hr') return 'Admin Kurikulum';
+  if (lower === 'operator jadwal' || lower === 'operator_jadwal' || lower === 'finance') return 'Operator Jadwal';
+  if (lower === 'viewer' || lower === 'lecturer') return 'Viewer';
+  if (lower === 'mahasantri' || lower === 'student') return 'Mahasantri';
+
+  return role;
+}
+
+function isAdminAreaRole(role) {
+  var normalized = normalizeRole(role);
+  return normalized === 'Super Admin' || normalized === 'Admin Kurikulum' || normalized === 'Operator Jadwal';
+}
+
+function isScheduleOperatorRole(role) {
+  var normalized = normalizeRole(role);
+  return normalized === 'Super Admin' || normalized === 'Operator Jadwal';
+}
 
 // ── AUTH WRAPPER ──────────────────────────────────────────────────────────────
 var auth = {
@@ -23,7 +50,7 @@ var auth = {
         password: creds.password
       });
       if (error) throw error;
-      const role = data.user?.app_metadata?.role || 'lecturer';
+      const role = normalizeRole(data.user?.app_metadata?.role);
       return {
         data: { user: { id: data.user.id, email: data.user.email, role } },
         error: null
@@ -37,15 +64,81 @@ var auth = {
     }
   },
 
+  async signInWithOtp(email) {
+    try {
+      const { error } = await _sb.auth.signInWithOtp({
+        email: email.trim().toLowerCase()
+      });
+      if (error) throw error;
+      return { data: { message: 'Kode OTP telah dikirim ke email Anda' }, error: null };
+    } catch (err) {
+      var msg = err.message || 'Gagal mengirim OTP';
+      if (msg.includes('Too many requests')) msg = 'Terlalu banyak permintaan. Coba lagi nanti.';
+      return { data: null, error: { message: msg } };
+    }
+  },
+
+  async verifyOtp(email, token) {
+    try {
+      const { data, error } = await _sb.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: token.trim(),
+        type: 'email'
+      });
+      if (error) throw error;
+      const role = normalizeRole(data.user?.app_metadata?.role);
+      return {
+        data: { user: { id: data.user.id, email: data.user.email, role } },
+        error: null
+      };
+    } catch (err) {
+      var msg = err.message || 'Kode OTP salah atau kedaluwarsa';
+      if (msg.includes('Token has expired')) msg = 'Kode OTP sudah kedaluwarsa. Minta kode baru.';
+      if (msg.includes('Invalid token')) msg = 'Kode OTP salah. Periksa kembali.';
+      return { data: null, error: { message: msg } };
+    }
+  },
+
   async getSession() {
     const { data, error } = await _sb.auth.getSession();
     if (error || !data.session) return { data: { session: null }, error };
     const user = data.session.user;
-    const role = user?.app_metadata?.role || 'lecturer';
+    const role = normalizeRole(user?.app_metadata?.role);
     return {
       data: { session: { user: { id: user.id, email: user.email, role } } },
       error: null
     };
+  },
+
+  async resetPasswordForEmail(email) {
+    try {
+      const { error } = await _sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: window.location.origin + '/reset-password.html'
+      });
+      if (error) throw error;
+      return { data: { message: 'Link reset password telah dikirim ke email Anda' }, error: null };
+    } catch (err) {
+      var msg = err.message || 'Gagal mengirim link reset password';
+      if (msg.includes('Too many requests')) msg = 'Terlalu banyak permintaan. Coba lagi nanti.';
+      return { data: null, error: { message: msg } };
+    }
+  },
+
+  async updateUserPassword(newPassword) {
+    try {
+      const { data, error } = await _sb.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      const role = normalizeRole(data.user?.app_metadata?.role);
+      return {
+        data: { user: { id: data.user.id, email: data.user.email, role } },
+        error: null
+      };
+    } catch (err) {
+      var msg = err.message || 'Gagal mengubah password';
+      if (msg.includes('New password should be different')) msg = 'Password baru harus berbeda dari password lama';
+      if (msg.includes('Password should be at least 6')) msg = 'Password minimal 6 karakter';
+      return { data: null, error: { message: msg } };
+    }
   },
 
   async signOut() {
@@ -53,6 +146,7 @@ var auth = {
     return { error: null };
   }
 };
+
 
 // ── DATABASE HELPERS ──────────────────────────────────────────────────────────
 

@@ -1,0 +1,13 @@
+{
+  "name": "sistem-administrasi-mahad-aly",
+  "version": "1.0.0",
+  "description": "Sistem Administrasi Ma'had Aly An-Nur II",
+  "private": true,
+  "scripts": {
+    "dev": "live-server --port=3000 --no-browser",
+    "start": "live-server --port=3000"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

@@ -43,8 +43,25 @@ async function loadAttendance() {
     // 2. Hitung total pertemuan per hari dalam bulan
     var meetingsInMonth = countMeetingsInMonth(month, year);
 
-    // 3. Generate attendance_monthly jika belum ada
-    var toInsert = unique.map(function(s) {
+    // 3. Ambil data attendance yang sudah ada di DB untuk menghindari duplikasi
+    const { data: existingAtt, error: extErr } = await _sb
+      .from('attendance_monthly')
+      .select('lecturer_id, mata_kuliah_id, day_of_week, session_slot')
+      .eq('period_month', month)
+      .eq('period_year', year);
+    if (extErr) throw extErr;
+
+    var existingMap = {};
+    (existingAtt || []).forEach(function(e) {
+      var key = [e.lecturer_id, e.mata_kuliah_id||'', e.day_of_week, e.session_slot].join('|');
+      existingMap[key] = true;
+    });
+
+    // 4. Generate attendance_monthly jika belum ada
+    var toInsert = unique.filter(function(s) {
+      var key = [s.lecturer_id, s.mata_kuliah_id||'', s.day_of_week, s.session_slot].join('|');
+      return !existingMap[key];
+    }).map(function(s) {
       return {
         lecturer_id:    s.lecturer_id,
         mata_kuliah_id: s.mata_kuliah_id || null,
@@ -58,13 +75,11 @@ async function loadAttendance() {
     });
 
     if (toInsert.length > 0) {
-      await _sb.from('attendance_monthly').upsert(toInsert, {
-        onConflict: 'lecturer_id,mata_kuliah_id,day_of_week,session_slot,period_month,period_year',
-        ignoreDuplicates: true
-      });
+      const { error: insErr } = await _sb.from('attendance_monthly').insert(toInsert);
+      if (insErr) throw insErr;
     }
 
-    // 4. Ambil data attendance bulan ini via view
+    // 5. Ambil data attendance bulan ini via view
     const { data: attData, error: attErr } = await _sb
       .from('v_attendance_monthly')
       .select('*')
@@ -121,17 +136,31 @@ function renderAttendanceTable() {
 
   var SESI_LABEL = {1:'Pagi 1', 2:'Pagi 2', 3:'Sore', 4:'Malam'};
 
-  // Group per dosen
+  // Group per dosen berdasarkan lecturer_id
   var byLecturer = {};
+  var lecturerOrder = [];
   attendanceMonthlyData.forEach(function(a) {
-    var n = a.lecturer_name;
-    if (!byLecturer[n]) byLecturer[n] = [];
-    byLecturer[n].push(a);
+    var lid = a.lecturer_id;
+    if (!byLecturer[lid]) {
+      byLecturer[lid] = {
+        name: a.lecturer_name || '-',
+        nidn: a.nidn || '',
+        rows: []
+      };
+      lecturerOrder.push(lid);
+    }
+    byLecturer[lid].rows.push(a);
+  });
+
+  // Urutkan lecturer berdasarkan nama dosen
+  lecturerOrder.sort(function(a, b) {
+    return byLecturer[a].name.localeCompare(byLecturer[b].name, 'id');
   });
 
   var html = '';
-  Object.keys(byLecturer).sort().forEach(function(name) {
-    var rows = byLecturer[name];
+  lecturerOrder.forEach(function(lid) {
+    var group = byLecturer[lid];
+    var rows = group.rows;
     rows.forEach(function(a, idx) {
       var meetings = a.total_meetings || 0;
       var hadir    = a.total_hadir    || 0;
@@ -147,7 +176,7 @@ function renderAttendanceTable() {
       // Nama dosen (rowspan)
       if (idx === 0) {
         html += '<td rowspan="' + rows.length + '" style="vertical-align:middle;font-weight:600;border-right:2px solid var(--card-border);">' +
-          escapeHtml(name) + '<br><small class="text-secondary">' + escapeHtml(a.nidn||'') + '</small>' +
+          escapeHtml(group.name) + '<br><small class="text-secondary">' + escapeHtml(group.nidn) + '</small>' +
         '</td>';
       }
 

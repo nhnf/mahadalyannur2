@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -156,7 +156,7 @@
           >
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="passwordGroup">
           <label class="form-label" for="password">Password</label>
           <input 
             type="password" 
@@ -172,7 +172,52 @@
           <span id="loginBtnText">Masuk</span>
           <div class="spinner spinner-sm" id="loginSpinner" style="display: none;"></div>
         </button>
+
+        <div style="text-align:center;margin-top:var(--space-3);">
+          <a href="#" id="forgotPasswordLink" style="font-size:13px;color:var(--primary-500);text-decoration:none;font-weight:500;">Lupa Password?</a>
+        </div>
       </form>
+
+      <!-- Forgot Password Form (hidden by default) -->
+      <form class="login-form" id="forgotForm" style="display: none;">
+        <div style="text-align:center;margin-bottom:var(--space-4);padding:var(--space-3);background:var(--primary-50);border-radius:var(--radius-md);">
+          <p style="font-size:14px;color:var(--text-secondary);margin:0;">Masukkan email Anda dan kami akan mengirimkan link untuk mengatur ulang password.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="resetEmail">Email</label>
+          <input 
+            type="email" 
+            id="resetEmail" 
+            class="input" 
+            placeholder="nama@example.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" id="resetBtn">
+          <span id="resetBtnText">Kirim Link Reset</span>
+          <div class="spinner spinner-sm" id="resetSpinner" style="display: none;"></div>
+        </button>
+
+        <div style="text-align:center;margin-top:var(--space-3);">
+          <a href="#" id="backToLoginLink" style="font-size:13px;color:var(--primary-500);text-decoration:none;font-weight:500;">← Kembali ke Login</a>
+        </div>
+      </form>
+
+      <!-- Success message for forgot password -->
+      <div id="resetSuccess" style="display: none;">
+        <div style="text-align:center;padding:var(--space-4);background:var(--success-50, #F0FDF4);border:1px solid var(--success-200, #BBF7D0);border-radius:var(--radius-md);margin-bottom:var(--space-4);">
+          <svg style="width:48px;height:48px;color:#22C55E;margin:0 auto var(--space-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <p style="font-weight:600;color:var(--text-primary);margin-bottom:var(--space-2);">Email Terkirim!</p>
+          <p style="font-size:14px;color:var(--text-secondary);margin:0;">Silakan cek inbox email Anda dan klik link reset password yang dikirim.</p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-lg" id="backToLoginFromSuccess" style="width:100%;">
+          ← Kembali ke Login
+        </button>
+      </div>
 
       <!-- Footer -->
       <div class="login-footer">
@@ -181,61 +226,138 @@
     </div>
   </div>
 
-  <!-- Apps Script Client -->
+  <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
   
   <script>
     var loginForm    = document.getElementById('loginForm');
-    var loginBtn     = document.getElementById('loginBtn');
-    var loginBtnText = document.getElementById('loginBtnText');
-    var loginSpinner = document.getElementById('loginSpinner');
+    var forgotForm   = document.getElementById('forgotForm');
+    var resetSuccess = document.getElementById('resetSuccess');
     var loginError   = document.getElementById('loginError');
     var loginErrMsg  = document.getElementById('loginErrorMessage');
 
     function redirectByRole(role) {
-      if (role === 'admin' || role === 'hr') {
+      var normalizedRole = typeof normalizeRole === 'function' ? normalizeRole(role) : role;
+      if (normalizedRole === 'Super Admin' || normalizedRole === 'Admin Kurikulum') {
         window.location.href = 'dashboard-admin.html';
-      } else if (role === 'finance') {
+      } else if (normalizedRole === 'Operator Jadwal') {
         window.location.href = 'dashboard-finance.html';
+      } else if (normalizedRole === 'Mahasantri') {
+        window.location.href = 'dashboard-mahasantri.html';
       } else {
         window.location.href = 'dashboard-lecturer.html';
       }
     }
 
+    function showError(msg) {
+      loginErrMsg.textContent = msg;
+      loginError.classList.add('show');
+    }
+
+    function hideError() {
+      loginError.classList.remove('show');
+    }
+
+    function showView(view) {
+      loginForm.style.display    = view === 'login'    ? 'flex' : 'none';
+      forgotForm.style.display   = view === 'forgot'   ? 'flex' : 'none';
+      resetSuccess.style.display = view === 'success'   ? 'block' : 'none';
+    }
+
     // Cek session yang sudah ada
     auth.getSession().then(function(res) {
       if (res.data && res.data.session) {
-        redirectByRole(res.data.session.user.role || 'lecturer');
+        redirectByRole(res.data.session.user.role || 'Viewer');
       }
     });
 
+    // Login dengan Email + Password
     loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
+      hideError();
+
       var email    = document.getElementById('email').value;
       var password = document.getElementById('password').value;
-
-      loginBtn.disabled      = true;
-      loginBtnText.textContent = 'Memproses...';
-      loginSpinner.style.display = 'block';
-      loginError.classList.remove('show');
-
-      var result = await auth.signInWithPassword({ email: email, password: password });
-
-      if (result.error) {
-        loginErrMsg.textContent = result.error.message || 'Email atau password salah';
-        loginError.classList.add('show');
-        loginBtn.disabled      = false;
-        loginBtnText.textContent = 'Masuk';
-        loginSpinner.style.display = 'none';
+      if (!email || !password) {
+        showError('Email dan password harus diisi');
         return;
       }
 
-      redirectByRole(result.data.user.role || 'lecturer');
+      var btn     = document.getElementById('loginBtn');
+      var btnTxt  = document.getElementById('loginBtnText');
+      var spinner = document.getElementById('loginSpinner');
+      btn.disabled     = true;
+      btnTxt.textContent = 'Memproses...';
+      spinner.style.display = 'block';
+
+      var result = await auth.signInWithPassword({ email: email, password: password });
+
+      btn.disabled     = false;
+      btnTxt.textContent = 'Masuk';
+      spinner.style.display = 'none';
+
+      if (result.error) {
+        showError(result.error.message);
+        return;
+      }
+
+      redirectByRole(result.data.user.role || 'Viewer');
+    });
+
+    // ── FORGOT PASSWORD FLOW ─────────────────────────────────────────────
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      hideError();
+      var emailVal = document.getElementById('email').value;
+      if (emailVal) document.getElementById('resetEmail').value = emailVal;
+      showView('forgot');
+    });
+
+    document.getElementById('backToLoginLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      hideError();
+      showView('login');
+    });
+
+    document.getElementById('backToLoginFromSuccess').addEventListener('click', function(e) {
+      e.preventDefault();
+      hideError();
+      showView('login');
+    });
+
+    forgotForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideError();
+
+      var email = document.getElementById('resetEmail').value;
+      if (!email) {
+        showError('Masukkan email Anda');
+        return;
+      }
+
+      var btn     = document.getElementById('resetBtn');
+      var btnTxt  = document.getElementById('resetBtnText');
+      var spinner = document.getElementById('resetSpinner');
+      btn.disabled     = true;
+      btnTxt.textContent = 'Mengirim...';
+      spinner.style.display = 'block';
+
+      var result = await auth.resetPasswordForEmail(email);
+
+      btn.disabled     = false;
+      btnTxt.textContent = 'Kirim Link Reset';
+      spinner.style.display = 'none';
+
+      if (result.error) {
+        showError(result.error.message);
+        return;
+      }
+
+      showView('success');
     });
   </script>
 </body>
 </html>
-
-

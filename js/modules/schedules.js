@@ -1,13 +1,25 @@
+
+// Mapping helper untuk membatasi panjang kolom semester <= 5 karakter
+function toShortSemester(semStr) {
+  if (!semStr) return '';
+  return semStr.trim().replace(' Putra', 'PA').replace(' Putri', 'PI');
+}
+
+function toDisplaySemester(shortSem) {
+  if (!shortSem) return '';
+  return shortSem.trim().replace('PA', ' Putra').replace('PI', ' Putri');
+}
 /**
  * Schedules Module — Supabase
  * Tampilan tabel: baris = Hari+Sesi, kolom = Semester (2A,2B,4,6,8)
  */
 
 var schedulesData = [];
-var HARI_ORDER   = ['Sabtu','Ahad','Senin','Selasa','Rabu','Kamis'];
+var HARI_ORDER   = ['Sabtu','Ahad','Senin','Selasa','Rabu','Kamis','Jumat'];
 var SESI_LABEL   = {1:'Pagi 1', 2:'Pagi 2', 3:'Sore', 4:'Malam'};
-var SEMESTERS    = ['2A','2B','4','6','8'];
-var SEM_DISPLAY  = {'2A':'2A', '2B':'2B', '4':'4', '6':'6', '8':'8'};
+var SEMESTERS    = ['1 Putra','1 Putri','3A Putra','3A Putri','3B Putra','5 Putra','7 Putra'];
+var SEM_DISPLAY  = {'1 Putra':'1 Putra', '1 Putri':'1 Putri', '3A Putra':'3A Putra', '3A Putri':'3A Putri', '3B Putra':'3B Putra', '5 Putra':'5 Putra', '7 Putra':'7 Putra'};
+var schedulesClassroomsCache = [];
 
 // ── LOAD ─────────────────────────────────────────────────────────────────────
 async function loadSchedules() {
@@ -21,9 +33,74 @@ async function loadSchedules() {
       document.getElementById('filterScheduleLecturer').value : '';
     if (lecturerId) query = query.eq('lecturer_id', lecturerId);
 
+    // 1. Ambil data kelas aktif dari database untuk membentuk kolom semester dinamis
+    const { data: classrooms, error: clErr } = await _sb
+      .from('classrooms')
+      .select('id, name, parallel, gender')
+      .is('deleted_at', null)
+      .eq('is_active', true);
+    
+    if (clErr) console.error('Error fetching classrooms for semesters grid:', clErr);
+    
+    schedulesClassroomsCache = classrooms || [];
+
+    if (schedulesClassroomsCache.length > 0) {
+      var activeSems = {};
+      schedulesClassroomsCache.forEach(function(c) {
+        var num = c.name.replace(/[^0-9]/g, '');
+        if (num) {
+          var parallelStr = c.parallel ? c.parallel : '';
+          var genderStr = c.gender === 'putri' ? 'Putri' : 'Putra';
+          var semStr = num + parallelStr + ' ' + genderStr;
+          activeSems[semStr] = true;
+          c.semStr = semStr; // save for lookup
+        }
+      });
+      var keys = Object.keys(activeSems);
+      if (keys.length > 0) {
+        // Fungsi pembantu untuk mem-parsing string semester
+        function parseSemStr(str) {
+          var isPutri = str.indexOf('Putri') !== -1;
+          var semPart = str.split(' ')[0] || '';
+          var num = parseInt(semPart.replace(/[^0-9]/g, '')) || 0;
+          var letter = semPart.replace(/[0-9]/g, '') || '';
+          return { isPutri: isPutri, num: num, letter: letter };
+        }
+
+        SEMESTERS = keys.sort(function(a, b) {
+          var pa = parseSemStr(a);
+          var pb = parseSemStr(b);
+          
+          // 1. Bandingkan gender (Putra lebih dulu)
+          if (pa.isPutri !== pb.isPutri) {
+            return pa.isPutri ? 1 : -1;
+          }
+          // 2. Bandingkan nomor semester
+          if (pa.num !== pb.num) {
+            return pa.num - pb.num;
+          }
+          // 3. Bandingkan paralel (letter)
+          return pa.letter.localeCompare(pb.letter);
+        });
+
+        SEM_DISPLAY = {};
+        SEMESTERS.forEach(function(sm) {
+          SEM_DISPLAY[sm] = sm;
+        });
+      }
+    }
+
     const { data, error } = await query;
     if (error) throw error;
     schedulesData = data || [];
+    
+    // Konversi semester dari database (short format) ke display format sebelum rendering
+    schedulesData.forEach(function(s) {
+      if (s.semester) {
+        s.semester = toDisplaySemester(s.semester);
+      }
+    });
+
     renderScheduleGrid();
   } catch(err) {
     console.error('loadSchedules error:', err);
@@ -152,17 +229,34 @@ function renderScheduleGrid() {
 
   html += '</tbody></table></div>';
 
-  html += '<div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);font-size:12px;color:var(--text-secondary);">' +
-    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--warning);border-radius:2px;display:inline-block;"></span> Pending</span>' +
-    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--success);border-radius:2px;display:inline-block;"></span> Hadir</span>' +
-    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:var(--danger);border-radius:2px;display:inline-block;"></span> Absen</span>' +
-    '</div>';
+
 
   container.innerHTML = html;
 }
 
 // ── MODAL TAMBAH ──────────────────────────────────────────────────────────────
+function populateScheduleSemesterDropdown() {
+  var select = document.getElementById('scheduleSemester');
+  if (!select) return;
+  var currentValue = select.value;
+  select.innerHTML = '<option value="">Pilih Semester</option>';
+  SEMESTERS.forEach(function(sem) {
+    var opt = document.createElement('option');
+    opt.value = sem;
+    opt.textContent = sem;
+    var cls = schedulesClassroomsCache.find(function(c) { return c.semStr === sem; });
+    if (cls) {
+      opt.dataset.classroomId = cls.id;
+    }
+    select.appendChild(opt);
+  });
+  if (currentValue && select.querySelector('option[value="' + currentValue + '"]')) {
+    select.value = currentValue;
+  }
+}
+
 function showAddScheduleModal() {
+  populateScheduleSemesterDropdown();
   document.getElementById('scheduleModalTitle').textContent = 'Tambah Jadwal';
   document.getElementById('scheduleForm').reset();
   document.getElementById('scheduleId').value = '';
@@ -177,12 +271,13 @@ async function editSchedule(id) {
   var s = schedulesData.find(function(x) { return x.id === id; });
   if (!s) { showToast('Jadwal tidak ditemukan', 'error'); return; }
 
+  populateScheduleSemesterDropdown();
   document.getElementById('scheduleModalTitle').textContent = 'Edit Jadwal';
   document.getElementById('scheduleId').value = s.id;
 
   document.getElementById('scheduleLecturer').value = s.lecturer_id || '';
   document.getElementById('scheduleDay').value      = s.day_of_week || '';
-  document.getElementById('scheduleSemester').value = s.semester    || '';
+  document.getElementById('scheduleSemester').value = toDisplaySemester(s.semester) || '';
   document.getElementById('scheduleMatkul').value   = s.mata_kuliah || '';
   document.getElementById('scheduleNotes').value    = s.notes       || '';
 
@@ -246,12 +341,17 @@ async function saveSchedule() {
       var slots   = Array.prototype.map.call(checked, function(cb) { return parseInt(cb.value); });
       if (slots.length === 0) { showToast('Pilih minimal satu sesi jam', 'error'); hideLoading(); return; }
 
+      var semSelect  = document.getElementById('scheduleSemester');
+      var optSelected = semSelect.options[semSelect.selectedIndex];
+      var classroomId = optSelected ? optSelected.dataset.classroomId : null;
+
       var rows = slots.map(function(slot) {
         return {
           lecturer_id:    lecturerId || null,
           day_of_week:    dayOfWeek,
           session_slot:   slot,
-          semester:       semester,
+          semester:       toShortSemester(semester),
+          classroom_id:   classroomId || null,
           mata_kuliah:    matkul || null,
           mata_kuliah_id: matkulId || null,
           status:         'pending',

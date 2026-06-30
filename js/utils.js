@@ -127,7 +127,7 @@ function showToast(message, type = 'info') {
     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       ${iconMap[type] || iconMap.info}
     </svg>
-    <div class="toast-message">${message}</div>
+    <div class="toast-message">${escapeHtml(message)}</div>
   `;
   
   container.appendChild(toast);
